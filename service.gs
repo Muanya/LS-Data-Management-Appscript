@@ -1,0 +1,451 @@
+
+function getHealth() {
+  return { success: true, data: "Health is Okay" };
+}
+
+function getAttendees() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDEES);
+  const data = sheet.getDataRange().getValues();
+
+  const attendees = [];
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0]) {
+      attendees.push({
+        id: data[i][0].toString(),
+        firstName: data[i][1],
+        lastName: data[i][2],
+        email: data[i][3],
+        dob: data[i][4],
+        phone: data[i][5],
+        school: data[i][6],
+        graduated: data[i][7]
+      });
+    }
+  }
+  return { success: true, data: attendees };
+}
+
+function getCircleGroups() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_CIRCLE_GROUPS);
+  const data = sheet.getDataRange().getValues();
+
+  const groups = [];
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0]) {
+      groups.push({ id: data[i][0].toString(), name: data[i][1] });
+    }
+  }
+  return { success: true, data: groups };
+}
+
+function searchCircleGroup(name) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_CIRCLE_GROUPS);
+  const data = sheet.getDataRange().getValues();
+  const searchName = name.toLowerCase().trim();
+  const matches = [];
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1] && data[i][1].toLowerCase().includes(searchName)) {
+      matches.push({ id: data[i][0].toString(), name: data[i][1] });
+    }
+  }
+  return { success: true, data: matches };
+}
+
+function searchAttendee(name) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDEES);
+  const data = sheet.getDataRange().getValues();
+  const searchName = name.toLowerCase().trim();
+  const matches = [];
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1] && data[i][1].toLowerCase().includes(searchName)) {
+      matches.push({
+        id: data[i][0].toString(),
+        name: data[i][1],
+        createdDate: data[i][2]
+      });
+    }
+  }
+  return { success: true, data: matches };
+}
+
+function addAttendee(inputData) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDEES);
+  const { firstName, lastName, email, phone } = inputData;
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    const sheetFirstName = data[i][1]?.toString().toLowerCase().trim();
+    const sheetLastName  = data[i][2]?.toString().toLowerCase().trim();
+    const sheetEmail     = data[i][3]?.toString().toLowerCase().trim();
+
+    if (
+      (sheetFirstName === firstName.toLowerCase().trim() && sheetLastName === lastName.toLowerCase().trim()) ||
+      (email && sheetEmail && sheetEmail === email.toLowerCase().trim())
+    ) {
+      return {
+        success: false,
+        message: 'Attendee already exists',
+        data: { id: data[i][0].toString(), firstName: data[i][1], lastName: data[i][2] }
+      };
+    }
+  }
+
+  const id = new Date().getTime().toString();
+  const createdDate = new Date();
+  sheet.appendRow([id, firstName.trim(), lastName.trim(), email.trim(), '', phone?.trim(), '', false, createdDate]);
+
+  return {
+    success: true,
+    message: 'Attendee added successfully',
+    data: { id, firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), createdDate }
+  };
+}
+
+function addCircleGroup(name) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_CIRCLE_GROUPS);
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1] && data[i][1].toLowerCase() === name.toLowerCase().trim()) {
+      return {
+        success: false,
+        message: 'Circle group already exists',
+        data: { id: data[i][0].toString(), name: data[i][1], createdDate: data[i][2] }
+      };
+    }
+  }
+
+  const id = new Date().getTime().toString();
+  const createdDate = new Date();
+  sheet.appendRow([id, name.trim(), createdDate]);
+
+  return {
+    success: true,
+    message: 'Circle group added successfully',
+    data: { id, name: name.trim(), createdDate }
+  };
+}
+
+// ── ATTENDANCE: single-table versions ────────────────────────────────────────
+
+function recordBulkAttendance(params) {
+  const attendees = JSON.parse(params.attendeeData || '[]');
+  const activity  = params.activity;
+  const date      = params.date;
+  const groupId   = params.groupId   || '';
+  const groupName = params.groupName || '';
+
+  if (!attendees.length || !activity || !date) {
+    return { success: false, message: 'Missing required parameters' };
+  }
+  if (!VALID_ACTIVITIES.has(activity)) {
+    return { success: false, message: 'Invalid activity' };
+  }
+  if (activity === 'Circle' && (!groupId || !groupName)) {
+    return { success: false, message: 'Circle activity requires group information' };
+  }
+
+  const ss        = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet     = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
+  const timestamp = new Date();
+
+  const results = { success: true, total: attendees.length, successful: 0, failed: 0, errors: [], records: [] };
+  const dataToInsert = [];
+
+  attendees.forEach((attendee, index) => {
+    try {
+      const id = new Date().getTime().toString() + index;
+      // Row: ID | Attendee ID | Attendee Name | Activity | Date | Group ID | Group Name | Timestamp
+      dataToInsert.push([id, attendee.id, attendee.name, activity, date, groupId, groupName, timestamp]);
+
+      results.records.push({
+        id,
+        attendeeId:   attendee.id,
+        attendeeName: attendee.name,
+        activity,
+        groupId:   groupId   || null,
+        groupName: groupName || null,
+        date,
+        timestamp
+      });
+      results.successful++;
+    } catch (error) {
+      results.failed++;
+      results.errors.push({ attendee, error: error.toString(), index });
+    }
+  });
+
+  if (dataToInsert.length > 0) {
+    const lastRow     = sheet.getLastRow();
+    const targetRange = sheet.getRange(lastRow + 1, 1, dataToInsert.length, dataToInsert[0].length);
+    targetRange.setValues(dataToInsert);
+  }
+
+  return results;
+}
+
+function removeAttendance(attendeeId, activity, date, groupId) {
+  if (!VALID_ACTIVITIES.has(activity)) {
+    return { success: false, message: 'Invalid activity' };
+  }
+
+  const ss   = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
+  const data  = sheet.getDataRange().getValues();
+
+  // Scan bottom-up so row deletion doesn't shift indices
+  for (let i = data.length - 1; i >= 1; i--) {
+    const rowActivity   = data[i][COL.ACTIVITY];
+    const rowAttendeeId = data[i][COL.ATTENDEE_ID];
+    const rowDate       = data[i][COL.DATE];
+    const rowGroupId    = data[i][COL.GROUP_ID];
+
+    if (rowActivity != activity) continue;
+    if (rowAttendeeId != attendeeId) continue;
+    if (rowDate != date) continue;
+    if (activity === 'Circle' && rowGroupId != groupId) continue;
+
+    sheet.deleteRow(i + 1);
+    return { success: true, message: 'Attendance removed successfully' };
+  }
+
+  return { success: false, message: 'Attendance record not found' };
+}
+
+function getAttendance(activity, startDate, endDate) {
+  if (!VALID_ACTIVITIES.has(activity)) {
+    return { success: false, message: 'Invalid activity' };
+  }
+
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
+  const data  = sheet.getDataRange().getValues();
+
+  const start = startDate ? parseDateForComparison(startDate) : new Date('2000-01-01');
+  const end   = endDate   ? parseDateForComparison(endDate)   : new Date('2099-12-31');
+  if (startDate) start.setHours(0, 0, 0, 0);
+  if (endDate)   end.setHours(23, 59, 59, 999);
+
+  const attendance = [];
+
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i][COL.ID]) continue;
+    if (data[i][COL.ACTIVITY] !== activity) continue;
+
+    const recordDate = parseDateForComparison(data[i][COL.DATE]);
+    if (recordDate < start || recordDate > end) continue;
+
+    const record = {
+      id:           data[i][COL.ID].toString(),
+      attendeeId:   data[i][COL.ATTENDEE_ID].toString(),
+      attendeeName: data[i][COL.ATTENDEE_NAME],
+      activity:     data[i][COL.ACTIVITY],
+      date:         formatDateForOutput(data[i][COL.DATE]),
+      timestamp:    data[i][COL.TIMESTAMP]
+    };
+
+    // Include group fields for Circle (mirrors old response shape)
+    if (activity === 'Circle') {
+      record.groupId   = data[i][COL.GROUP_ID].toString();
+      record.groupName = data[i][COL.GROUP_NAME];
+    }
+
+    attendance.push(record);
+  }
+
+  return { success: true, data: attendance };
+}
+
+function getAllAttendance(startDate, endDate) {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
+  const data  = sheet.getDataRange().getValues();
+
+  const start = startDate ? parseDateForComparison(startDate) : new Date('2000-01-01');
+  const end   = endDate   ? parseDateForComparison(endDate)   : new Date('2099-12-31');
+  if (startDate) start.setHours(0, 0, 0, 0);
+  if (endDate)   end.setHours(23, 59, 59, 999);
+
+  const allAttendance = [];
+
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i][COL.ID]) continue;
+
+    const recordDate = parseDateForComparison(data[i][COL.DATE]);
+    if (recordDate < start || recordDate > end) continue;
+
+    const activity = data[i][COL.ACTIVITY];
+    const record = {
+      id:           data[i][COL.ID].toString(),
+      attendeeId:   data[i][COL.ATTENDEE_ID].toString(),
+      attendeeName: data[i][COL.ATTENDEE_NAME],
+      activity,
+      date:         formatDateForOutput(data[i][COL.DATE]),
+      timestamp:    data[i][COL.TIMESTAMP]
+    };
+
+    if (activity === 'Circle') {
+      record.groupId   = data[i][COL.GROUP_ID].toString();
+      record.groupName = data[i][COL.GROUP_NAME];
+    }
+
+    allAttendance.push(record);
+  }
+
+  return { success: true, data: allAttendance };
+}
+
+// ── SUMMARIES (logic identical, now just uses unified query) ──────────────────
+
+function getActivitySummary(activity, startDate, endDate) {
+  const result = getAttendance(activity, startDate, endDate);
+  if (!result.success) return result;
+
+  const attendance   = result.data;
+  const uniqueDates  = [...new Set(attendance.map(a => a.date))];
+  const uniqueAttendees = [...new Set(attendance.map(a => a.attendeeId))];
+
+  const attendanceByDate = {};
+  uniqueDates.forEach(date => {
+    attendanceByDate[date] = attendance.filter(a => a.date === date).length;
+  });
+
+  const attendeeCounts = {};
+  attendance.forEach(a => {
+    if (!attendeeCounts[a.attendeeId]) {
+      attendeeCounts[a.attendeeId] = { id: a.attendeeId, name: a.attendeeName, count: 0 };
+    }
+    attendeeCounts[a.attendeeId].count++;
+  });
+
+  const topAttendees = Object.values(attendeeCounts).sort((a, b) => b.count - a.count).slice(0, 10);
+
+  return {
+    success: true,
+    data: {
+      activity,
+      dateRange: { start: startDate || 'All time', end: endDate || 'All time' },
+      totalSessions: uniqueDates.length,
+      totalAttendance: attendance.length,
+      averageAttendance: uniqueDates.length > 0 ? (attendance.length / uniqueDates.length).toFixed(2) : 0,
+      uniqueAttendees: uniqueAttendees.length,
+      attendanceByDate,
+      topAttendees,
+      sessions: uniqueDates.sort().reverse()
+    }
+  };
+}
+
+function getAttendeeSummary(attendeeId, startDate, endDate) {
+  const allAttendance = getAllAttendance(startDate, endDate);
+  if (!allAttendance.success) return allAttendance;
+
+  const attendeeRecords = allAttendance.data.filter(a => a.attendeeId === attendeeId);
+  if (attendeeRecords.length === 0) {
+    return { success: false, message: 'No attendance records found for this attendee in the specified date range' };
+  }
+
+  const attendeeName = attendeeRecords[0].attendeeName;
+
+  const activityBreakdown = {};
+  const activityDates     = {};
+  for (const activity of VALID_ACTIVITIES) {
+    const records = attendeeRecords.filter(a => a.activity === activity);
+    activityBreakdown[activity] = records.length;
+    activityDates[activity]     = records.map(a => a.date).sort();
+  }
+
+  const monthlyAttendance = {};
+  attendeeRecords.forEach(record => {
+    const date     = new Date(record.date);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    monthlyAttendance[monthKey] = (monthlyAttendance[monthKey] || 0) + 1;
+  });
+
+  return {
+    success: true,
+    data: {
+      attendeeId,
+      attendeeName,
+      dateRange: { start: startDate || 'All time', end: endDate || 'All time' },
+      totalAttendance: attendeeRecords.length,
+      activityBreakdown,
+      activityDates,
+      monthlyAttendance,
+      recentAttendance: attendeeRecords
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 10)
+        .map(a => ({ activity: a.activity, date: a.date, timestamp: a.timestamp }))
+    }
+  };
+}
+
+function getAllActivitySummaries(startDate, endDate) {
+  const summaries = {};
+  for (const activity of VALID_ACTIVITIES) {
+    const result = getActivitySummary(activity, startDate, endDate);
+    if (result.success) summaries[activity] = result.data;
+  }
+  return { success: true, data: summaries };
+}
+
+function getAllAttendeeSummaries(startDate, endDate) {
+  const attendeesResult = getAttendees();
+  if (!attendeesResult.success) return attendeesResult;
+
+  const summaries = [];
+  attendeesResult.data.forEach(attendee => {
+    const result = getAttendeeSummary(attendee.id, startDate, endDate);
+    if (result.success) summaries.push(result.data);
+  });
+
+  summaries.sort((a, b) => b.totalAttendance - a.totalAttendance);
+  return { success: true, data: summaries };
+}
+
+// ── DATE HELPERS (unchanged) ──────────────────────────────────────────────────
+
+function parseDateForComparison(dateValue) {
+  if (dateValue instanceof Date) return new Date(dateValue);
+  if (typeof dateValue === 'number') return new Date((dateValue - 25569) * 86400 * 1000);
+  if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateValue.split('-').map(Number);
+    return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  }
+  if (typeof dateValue === 'string' && dateValue.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+    const [month, day, year] = dateValue.split('/').map(Number);
+    return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  }
+  const date = new Date(dateValue);
+  return isNaN(date.getTime()) ? new Date('1970-01-01') : date;
+}
+
+function formatDateForOutput(dateValue) {
+  if (dateValue instanceof Date) {
+    return `${dateValue.getFullYear()}-${String(dateValue.getMonth()+1).padStart(2,'0')}-${String(dateValue.getDate()).padStart(2,'0')}`;
+  }
+  if (typeof dateValue === 'number') {
+    const d = new Date((dateValue - 25569) * 86400 * 1000);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  if (typeof dateValue === 'string') {
+    if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) return dateValue;
+    if (dateValue.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+      const [month, day, year] = dateValue.split('/');
+      return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+    }
+    const d = new Date(dateValue);
+    if (!isNaN(d.getTime())) {
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+  }
+  return String(dateValue);
+}
