@@ -1,0 +1,23 @@
+
+# clasp configuration files (these are YOUR local settings)
+.clasp.json
+.clasprc.json
+.clasprc*.json
+
+# Node modules (if you install any for type definitions)
+node_modules/
+package-lock.json
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
