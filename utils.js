@@ -14,7 +14,7 @@ function createResponse(success, data = null, message = '') {
 // Error response helper
 function createErrorResponse(message, error = null) {
   const response = createResponse(false, null, message);
-  if (error && process.env.NODE_ENV === 'development') {
+  if (error && typeof error === 'object') {
     response.error = error.toString();
   }
   return response;

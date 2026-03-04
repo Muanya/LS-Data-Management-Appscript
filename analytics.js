@@ -188,19 +188,19 @@ function calculateActivityOverlap(activityA, activityB, attendeesMap) {
 
 function getAttendeeName(attendeeId) {
   // Cache attendee names to avoid repeated sheet reads
-  if (!global.attendeeNameCache) {
-    global.attendeeNameCache = new Map();
+  if (!this.attendeeNameCache) {
+    this.attendeeNameCache = new Map();
     const sheet = getSheetSafe(SHEET_NAME_ATTENDEES);
     if (sheet) {
       const data = sheet.getDataRange().getValues();
       data.slice(1).forEach(row => {
         if (row[0]) {
-          global.attendeeNameCache.set(row[0].toString(), `${row[1] || ''} ${row[2] || ''}`.trim());
+          this.attendeeNameCache.set(row[0].toString(), `${row[1] || ''} ${row[2] || ''}`.trim());
         }
       });
     }
   }
-  return global.attendeeNameCache.get(attendeeId) || null;
+  return this.attendeeNameCache.get(attendeeId) || null;
 }
 
 function getMostPopularActivity() {
