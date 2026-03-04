@@ -26,25 +26,6 @@ function getRouter(e) {
         }
         break;
         
-      case 'addActivityGroup':
-        const addActivityGroupValidation = validateRequired(params, ['activityId', 'name']);
-        if (!addActivityGroupValidation.isValid) {
-          result = createErrorResponse(addActivityGroupValidation.message);
-        } else {
-          const groupData = {
-            name: params.name,
-            capacity: params.capacity,
-            isActive: params.isActive,
-            level: params.level,
-            day: params.day,
-            location: params.location,
-            instructor: params.instructor,
-            secondInstructor: params.secondInstructor
-          };
-          result = safeExecute(addActivityGroup, params.activityId, groupData);
-        }
-        break;
-        
       // Attendee operations
       case 'getAttendees':
         result = safeExecute(getAttendees);
@@ -55,14 +36,6 @@ function getRouter(e) {
           result = createErrorResponse(attendeeValidation.message);
         } else {
           result = safeExecute(searchAttendee, params.name);
-        }
-        break;
-      case 'addAttendee':
-        const addAttendeeValidation = validateRequired(params, ['firstName', 'lastName']);
-        if (!addAttendeeValidation.isValid) {
-          result = createErrorResponse(addAttendeeValidation.message);
-        } else {
-          result = safeExecute(addAttendee, params);
         }
         break;
         
@@ -227,6 +200,25 @@ function postRouter(e) {
           result = createErrorResponse(addAttendeeValidation.message);
         } else {
           result = safeExecute(addAttendee, params);
+        }
+        break;
+        
+      case 'addActivityGroup':
+        const addActivityGroupValidation = validateRequired(params, ['activityId', 'name']);
+        if (!addActivityGroupValidation.isValid) {
+          result = createErrorResponse(addActivityGroupValidation.message);
+        } else {
+          const groupData = {
+            name: params.name,
+            capacity: params.capacity,
+            isActive: params.isActive,
+            level: params.level,
+            day: params.day,
+            location: params.location,
+            instructor: params.instructor,
+            secondInstructor: params.secondInstructor
+          };
+          result = safeExecute(addActivityGroup, params.activityId, groupData);
         }
         break;
         

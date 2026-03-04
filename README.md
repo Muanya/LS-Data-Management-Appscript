@@ -106,7 +106,7 @@ Update `.clasp.json` with your script ID:
 ### Activities
 - `GET /?action=getActivities` - List all activities with metadata and categories
 - `GET /?action=getActivityGroups&activityId=<activityId>` - Get groups for a specific activity
-- `GET /?action=addActivityGroup&activityId=<activityId>&name=<name>&capacity=<capacity>&isActive=<isActive>&level=<level>&day=<day>&location=<location>&instructor=<instructor>&secondInstructor=<secondInstructor>` - Add new activity group
+- `POST /?action=addActivityGroup` - Add new activity group
 
 ### Attendees
 - `GET /?action=getAttendees` - List all attendees
@@ -285,8 +285,22 @@ const ACTIVITY_CONFIG = {
 
 Use the `addActivityGroup` endpoint to create new groups:
 
-```
-GET /?action=addActivityGroup&activityId=circles&name=Circle Group A&capacity=15&isActive=true&level=beginner&day=saturday&location=Room A&instructor=John Doe&secondInstructor=Jane Smith
+**Method**: `POST`
+**URL**: `/?action=addActivityGroup`
+
+**Request Body** (form data or JSON):
+```json
+{
+  "activityId": "circles",
+  "name": "Circle Group A",
+  "capacity": 20,
+  "isActive": true,
+  "level": "standard",
+  "day": "saturday",
+  "location": "Room A",
+  "instructor": "John Doe",
+  "secondInstructor": "Jane Smith"
+}
 ```
 
 **Required Parameters**:
