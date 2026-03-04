@@ -578,3 +578,89 @@ function formatDateForOutput(dateValue) {
   }
   return String(dateValue);
 }
+
+function getSortedCategories() {
+  return Object.values(ACTIVITY_CATEGORIES).sort((a, b) => a.displayOrder - b.displayOrder);
+}
+
+function getQuarterReportConfig() {
+  // Read configuration from Google Sheet
+  const sheet = getSheetSafe(SHEET_NAME_QUARTER_REPORT_CONFIG);
+
+  if (!sheet) {
+    // Return basic configuration if sheet doesn't exist
+    return {
+      success: true,
+      data: {
+        fields: [],
+        categories: getSortedCategories(),
+        version: "1.0.0",
+        lastUpdated: new Date().toISOString()
+      }
+    };
+  }
+
+  try {
+    const data = sheet.getDataRange().getValues();
+
+    if (data.length < 2) {
+      return {
+        success: true,
+        data: {
+          fields: [],
+          categories: getSortedCategories(),
+          version: "1.0.0",
+          lastUpdated: new Date().toISOString()
+        }
+      };
+    }
+
+    // Parse fields from sheet (assuming headers in row 1)
+    const fields = [];
+    for (let i = 1; i < data.length; i++) {
+      if (!data[i][0]) continue; // Skip empty rows
+
+      const field = {
+        key: data[i][0] || '',
+        label: data[i][1] || '',
+        dataType: data[i][2] || 'text',
+        isVisibleByDefault: data[i][3] === true || data[i][3] === 'TRUE' || data[i][3] === true,
+        category: data[i][4] || 'other',
+        displayOrder: parseInt(data[i][5]) || 999,
+        description: data[i][6] || ''
+      };
+
+      if (field.key) {
+        fields.push(field);
+      }
+    }
+
+    const categories = getSortedCategories();
+
+    // Sort fields by display order
+    fields.sort((a, b) => a.displayOrder - b.displayOrder);
+
+    return {
+      success: true,
+      data: {
+        fields: fields,
+        categories: categories,
+        version: "1.0.0",
+        lastUpdated: new Date().toISOString()
+      }
+    };
+
+  } catch (error) {
+    Logger.log('Error reading QuarterReportConfig sheet: ' + error.toString());
+    return {
+      success: true,
+      data: {
+        fields: [],
+        categories: getSortedCategories(),
+        version: "1.0.0",
+        lastUpdated: new Date().toISOString()
+      }
+    };
+  }
+}
+

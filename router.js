@@ -165,6 +165,10 @@ function getRouter(e) {
         }
         break;
 
+      case 'getQuarterReportConfig':
+        result = safeExecute(getQuarterReportConfig);
+        break;
+
       default:
         result = createErrorResponse('Invalid action', `Action '${action}' not found`);
     }

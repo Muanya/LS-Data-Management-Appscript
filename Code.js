@@ -1,214 +1,3 @@
-const SHEET_NAME_ATTENDEES = 'Attendees';
-const SHEET_NAME_ATTENDANCE = 'Attendance'; // Single unified table
-const CONFIG_SHEET_NAME = "Config";
-const DASHBOARD_CACHE_KEY = 'dashboard_data';
-
-// Activity group sheet mappings
-const ACTIVITY_GROUP_SHEETS = {
-  Circle: 'Circle_Groups',
-};
-
-// Add new activities here ONLY — no other files need to change
-const ACTIVITY_CONFIG = {
-  Med: {
-    id: 'meditations',
-    name: 'Meditations',
-    displayName: 'Number of meditations held',
-    category: 'Spiritual',
-    frequency: 'Weekly',
-    type: 'simple',
-    icon: 'Moon',
-    color: '#0f9d58',
-    dataType: 'number',
-    reportKey: 'numMeditations',
-    displayOrder: 12,
-    requiresGroup: false,
-    includeInQuarterReport: true,
-    includeInAttendanceTracking: true,
-    aggregationMethod: 'count'
-  },
-  Circle: {
-    id: 'circles',
-    name: 'Circles',
-    displayName: 'Number of circles (prep classes)',
-    category: 'Doctrinal',
-    frequency: 'Weekly',
-    type: 'grouped',
-    icon: 'Users',
-    color: '#f4b400',
-    dataType: 'grouped',
-    reportKey: 'numCircles',
-    displayOrder: 6,
-    requiresGroup: true,
-    groupType: 'circle',
-    allowMultipleGroups: true,
-    includeInQuarterReport: true,
-    includeInAttendanceTracking: true,
-    aggregationMethod: 'sum'
-  },
-  Recollection: {
-    id: 'recollections',
-    name: 'Recollections',
-    displayName: 'Monthly recollections',
-    category: 'Spiritual',
-    frequency: 'Monthly',
-    type: 'simple',
-    icon: 'Calendar',
-    color: '#db4437',
-    dataType: 'number',
-    reportKey: 'numMonthlyRetreats',
-    displayOrder: 8,
-    requiresGroup: false,
-    includeInQuarterReport: true,
-    includeInAttendanceTracking: true,
-    aggregationMethod: 'count'
-  },
-  Retreat: {
-    id: 'retreats',
-    name: 'Retreats',
-    displayName: 'Long retreats',
-    category: 'Spiritual',
-    frequency: 'Quarterly',
-    type: 'simple',
-    icon: 'Mountain',
-    color: '#4285f4',
-    dataType: 'number',
-    reportKey: 'numLongRetreats',
-    displayOrder: 10,
-    requiresGroup: false,
-    includeInQuarterReport: true,
-    includeInAttendanceTracking: true,
-    aggregationMethod: 'count'
-  },
-  Doctrine: {
-    id: 'doctrineClasses',
-    name: 'Doctrine Classes',
-    displayName: 'Doctrine classes',
-    category: 'Doctrinal',
-    frequency: 'Weekly',
-    type: 'simple',
-    icon: 'Book',
-    color: '#f49c42',
-    dataType: 'number',
-    reportKey: 'numDoctrineCls',
-    displayOrder: 14,
-    requiresGroup: false,
-    includeInQuarterReport: true,
-    includeInAttendanceTracking: true,
-    aggregationMethod: 'count'
-  },
-  EucharisticVigil: {
-    id: 'eucharisticVigils',
-    name: 'Eucharistic Vigils',
-    displayName: 'Eucharistic Vigils',
-    category: 'Spiritual',
-    frequency: 'Monthly',
-    type: 'simple',
-    icon: 'Heart',
-    color: '#8e24aa',
-    dataType: 'number',
-    reportKey: 'numEucharisticVigils',
-    displayOrder: 16,
-    requiresGroup: false,
-    includeInQuarterReport: true,
-    includeInAttendanceTracking: true,
-    aggregationMethod: 'count'
-  },
-  ProfessionalGetTogether: {
-    id: 'professionalGetTogethers',
-    name: 'Professional Get-Togethers',
-    displayName: 'Professional Get-togethers',
-    category: 'Professional',
-    frequency: 'Monthly',
-    type: 'simple',
-    icon: 'Briefcase',
-    color: '#546e7a',
-    dataType: 'number',
-    reportKey: 'numProfessionalGetTogethers',
-    displayOrder: 18,
-    requiresGroup: false,
-    includeInQuarterReport: true,
-    includeInAttendanceTracking: true,
-    aggregationMethod: 'count'
-  },
-  SpiritualDirection: {
-    id: 'spiritualDirection',
-    name: 'Spiritual Direction',
-    displayName: 'Spiritual Direction',
-    category: 'Spiritual',
-    frequency: 'Weekly',
-    type: 'simple',
-    icon: 'Cross',
-    color: '#2e7d32',
-    dataType: 'number',
-    reportKey: 'numSpiritualDirection',
-    displayOrder: 20,
-    requiresGroup: false,
-    includeInQuarterReport: true,
-    includeInAttendanceTracking: true,
-    aggregationMethod: 'count'
-  },
-  VisitToThePoor: {
-    id: 'visitsToThePoor',
-    name: 'Visits to the Poor',
-    displayName: 'Visits to the Poor',
-    category: 'Spiritual',
-    frequency: 'Monthly',
-    type: 'simple',
-    icon: 'Heart',
-    color: '#d32f2f',
-    dataType: 'number',
-    reportKey: 'numVisitsToThePoor',
-    displayOrder: 24,
-    requiresGroup: false,
-    includeInQuarterReport: true,
-    includeInAttendanceTracking: true,
-    aggregationMethod: 'count'
-  },
-  Workshop: {
-    id: 'workshops',
-    name: 'Workshops',
-    displayName: 'Professional Workshops',
-    category: 'Professional',
-    frequency: 'Monthly',
-    type: 'simple',
-    icon: 'Tool',
-    color: '#0277bd',
-    dataType: 'number',
-    reportKey: 'numWorkshops',
-    displayOrder: 22,
-    requiresGroup: false,
-    includeInQuarterReport: true,
-    includeInAttendanceTracking: true,
-    aggregationMethod: 'count'
-  }
-};
-
-// Activity categories configuration
-const ACTIVITY_CATEGORIES = {
-  Spiritual: {
-    id: 'spiritual',
-    name: 'Spiritual Activities',
-    displayOrder: 1
-  },
-  Doctrinal: {
-    id: 'doctrinal',
-    name: 'Doctrinal Activities',
-    displayOrder: 2
-  },
-  Professional: {
-    id: 'professional',
-    name: 'Professional Activities',
-    displayOrder: 3
-  }
-};
-
-const VALID_ACTIVITIES = new Set(Object.keys(ACTIVITY_CONFIG));
-
-// Attendance sheet column indices (0-based)
-// ID(0) | Attendee ID(1) | Attendee Name(2) | Activity(3) | Date(4) | Group ID(5) | Group Name(6) | Timestamp(7)
-const COL = { ID: 0, ATTENDEE_ID: 1, ATTENDEE_NAME: 2, ACTIVITY: 3, DATE: 4, GROUP_ID: 5, GROUP_NAME: 6, TIMESTAMP: 7 };
-
 function initializeSheets() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
@@ -234,6 +23,22 @@ function initializeSheets() {
     attendanceSheet = ss.insertSheet(SHEET_NAME_ATTENDANCE);
     attendanceSheet.appendRow(['ID', 'Attendee ID', 'Attendee Name', 'Activity', 'Date', 'Group ID', 'Group Name', 'Timestamp']);
     attendanceSheet.getRange('A1:H1').setFontWeight('bold').setBackground('#37474f').setFontColor('#ffffff');
+  }
+
+  // Initialize Quarter Report Config sheet
+  let quarterReportConfigSheet = ss.getSheetByName(SHEET_NAME_QUARTER_REPORT_CONFIG);
+  if (!quarterReportConfigSheet) {
+    quarterReportConfigSheet = ss.insertSheet(SHEET_NAME_QUARTER_REPORT_CONFIG);
+    quarterReportConfigSheet.appendRow(['Key', 'Label', 'Data Type', 'Is Visible By Default', 'Category', 'Display Order', 'Description']);
+    quarterReportConfigSheet.getRange('A1:G1').setFontWeight('bold').setBackground('#ff9800').setFontColor('#ffffff');
+    
+    
+    if (QUARTER_REPORT_FIELDS.length > 0) {
+      quarterReportConfigSheet.getRange(2, 1, QUARTER_REPORT_FIELDS.length, QUARTER_REPORT_FIELDS[0].length).setValues(QUARTER_REPORT_FIELDS);
+    }
+    
+    quarterReportConfigSheet.autoResizeColumns();
+    quarterReportConfigSheet.setFrozenRows(1);
   }
 }
 
