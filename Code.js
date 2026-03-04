@@ -117,7 +117,7 @@ const VALID_ACTIVITIES = new Set(Object.keys(ACTIVITY_CONFIG));
 
 // Attendance sheet column indices (0-based)
 // ID(0) | Attendee ID(1) | Attendee Name(2) | Activity(3) | Date(4) | Group ID(5) | Group Name(6) | Timestamp(7)
-const COL = { ID:0, ATTENDEE_ID:1, ATTENDEE_NAME:2, ACTIVITY:3, DATE:4, GROUP_ID:5, GROUP_NAME:6, TIMESTAMP:7 };
+const COL = { ID: 0, ATTENDEE_ID: 1, ATTENDEE_NAME: 2, ACTIVITY: 3, DATE: 4, GROUP_ID: 5, GROUP_NAME: 6, TIMESTAMP: 7 };
 
 function initializeSheets() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();

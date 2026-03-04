@@ -23,11 +23,11 @@ function getActivities() {
     includeInAttendanceTracking: activity.includeInAttendanceTracking,
     aggregationMethod: activity.aggregationMethod
   }));
-  
+
   const categories = Object.values(ACTIVITY_CATEGORIES);
-  
-  return { 
-    success: true, 
+
+  return {
+    success: true,
     data: {
       activities: activities.sort((a, b) => a.displayOrder - b.displayOrder),
       categories: categories.sort((a, b) => a.displayOrder - b.displayOrder)
@@ -41,14 +41,14 @@ function getActivityGroups(activityId) {
   if (!activityConfig) {
     return { success: false, message: 'Invalid activity ID' };
   }
-  
+
   // Get activity key from config (e.g., 'circles' -> 'Circle')
   const activityKey = Object.keys(ACTIVITY_CONFIG).find(key => ACTIVITY_CONFIG[key].id === activityId);
-  
+
   // Use unified group loading for all activities
   const groups = getActivityGroupsUnified(activityKey, activityId);
   const activeGroups = groups.filter(group => group.isActive);
-  
+
   return {
     success: true,
     data: {
@@ -66,22 +66,22 @@ function getActivityGroupsUnified(activityKey, activityId) {
     // Activity doesn't support groups
     return [];
   }
-  
+
   const sheet = getSheetSafe(sheetName);
   if (!sheet) {
     // Sheet doesn't exist yet, return empty array
     return [];
   }
-  
+
   const data = sheet.getDataRange().getValues();
   const groups = [];
-  
+
   for (let i = 1; i < data.length; i++) {
     if (!data[i][0]) continue; // Skip empty rows
-    
+
     const createdDate = data[i][2] ? new Date(data[i][2]) : new Date();
     const groupName = data[i][1] || '';
-    
+
     groups.push({
       id: data[i][0].toString(),
       name: groupName,
@@ -102,7 +102,7 @@ function getActivityGroupsUnified(activityKey, activityId) {
       // Removed updatedAt field
     });
   }
-  
+
   return groups;
 }
 
@@ -112,31 +112,31 @@ function addActivityGroup(activityId, groupData) {
   if (!activityConfig) {
     return { success: false, message: 'Invalid activity ID' };
   }
-  
+
   // Check if activity supports groups
   if (!activityConfig.requiresGroup) {
     return { success: false, message: 'Activity does not support groups' };
   }
-  
+
   // Get activity key from config (e.g., 'circles' -> 'Circle')
   const activityKey = Object.keys(ACTIVITY_CONFIG).find(key => ACTIVITY_CONFIG[key].id === activityId);
   const sheetName = ACTIVITY_GROUP_SHEETS[activityKey];
-  
+
   if (!sheetName) {
     return { success: false, message: 'Activity group sheet not configured' };
   }
-  
+
   const sheet = getSheetSafe(sheetName);
   if (!sheet) {
     return { success: false, message: 'Group sheet not found' };
   }
-  
+
   // Validate required fields
   const { name, capacity, isActive, level, day, location, instructor, secondInstructor } = groupData;
   if (!name || name.trim() === '') {
     return { success: false, message: 'Group name is required' };
   }
-  
+
   // Check for duplicate names
   const data = sheet.getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
@@ -148,12 +148,12 @@ function addActivityGroup(activityId, groupData) {
       };
     }
   }
-  
+
   // Add new group
   const id = new Date().getTime().toString();
   const createdDate = new Date();
   const updatedDate = new Date();
-  
+
   sheet.appendRow([
     id,
     name.trim(),
@@ -166,7 +166,7 @@ function addActivityGroup(activityId, groupData) {
     instructor || '',
     secondInstructor || ''
   ]);
-  
+
   return {
     success: true,
     message: 'Activity group added successfully',
@@ -220,8 +220,8 @@ function addAttendee(inputData) {
 
   for (let i = 1; i < data.length; i++) {
     const sheetFirstName = data[i][1]?.toString().toLowerCase().trim();
-    const sheetLastName  = data[i][2]?.toString().toLowerCase().trim();
-    const sheetEmail     = data[i][3]?.toString().toLowerCase().trim();
+    const sheetLastName = data[i][2]?.toString().toLowerCase().trim();
+    const sheetEmail = data[i][3]?.toString().toLowerCase().trim();
 
     if (
       (sheetFirstName === firstName.toLowerCase().trim() && sheetLastName === lastName.toLowerCase().trim()) ||
@@ -250,9 +250,9 @@ function addAttendee(inputData) {
 
 function recordBulkAttendance(params) {
   const attendees = JSON.parse(params.attendeeData || '[]');
-  const activity  = params.activity;
-  const date      = params.date;
-  const groupId   = params.groupId   || '';
+  const activity = params.activity;
+  const date = params.date;
+  const groupId = params.groupId || '';
   const groupName = params.groupName || '';
 
   if (!attendees.length || !activity || !date) {
@@ -265,8 +265,8 @@ function recordBulkAttendance(params) {
     return { success: false, message: 'Circle activity requires group information' };
   }
 
-  const ss        = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet     = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
   const timestamp = new Date();
 
   const results = { success: true, total: attendees.length, successful: 0, failed: 0, errors: [], records: [] };
@@ -280,10 +280,10 @@ function recordBulkAttendance(params) {
 
       results.records.push({
         id,
-        attendeeId:   attendee.id,
+        attendeeId: attendee.id,
         attendeeName: attendee.name,
         activity,
-        groupId:   groupId   || null,
+        groupId: groupId || null,
         groupName: groupName || null,
         date,
         timestamp
@@ -296,7 +296,7 @@ function recordBulkAttendance(params) {
   });
 
   if (dataToInsert.length > 0) {
-    const lastRow     = sheet.getLastRow();
+    const lastRow = sheet.getLastRow();
     const targetRange = sheet.getRange(lastRow + 1, 1, dataToInsert.length, dataToInsert[0].length);
     targetRange.setValues(dataToInsert);
   }
@@ -309,21 +309,21 @@ function removeAttendance(attendeeId, activity, date, groupId) {
     return { success: false, message: 'Invalid activity' };
   }
 
-  const ss   = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
   if (!sheet) {
     return { success: false, message: 'Attendance sheet not found' };
   }
-  
-  const data  = sheet.getDataRange().getValues();
+
+  const data = sheet.getDataRange().getValues();
   let deletedCount = 0;
 
   // Scan bottom-up so row deletion doesn't shift indices
   for (let i = data.length - 1; i >= 1; i--) {
-    const rowActivity   = data[i][COL.ACTIVITY];
+    const rowActivity = data[i][COL.ACTIVITY];
     const rowAttendeeId = data[i][COL.ATTENDEE_ID];
-    const rowDate       = data[i][COL.DATE];
-    const rowGroupId    = data[i][COL.GROUP_ID];
+    const rowDate = data[i][COL.DATE];
+    const rowGroupId = data[i][COL.GROUP_ID];
 
     // Convert to strings for comparison to handle type mismatches
     if (String(rowActivity) !== String(activity)) continue;
@@ -333,12 +333,12 @@ function removeAttendance(attendeeId, activity, date, groupId) {
 
     sheet.deleteRow(i + 1);
     deletedCount++;
-    
+
     // Only delete one record per call to be safe
     break;
   }
 
-  return deletedCount > 0 
+  return deletedCount > 0
     ? { success: true, message: 'Attendance removed successfully' }
     : { success: false, message: 'Attendance record not found' };
 }
@@ -352,13 +352,13 @@ function getAttendance(activity, startDate, endDate) {
   if (!sheet) {
     return { success: false, message: 'Attendance sheet not found' };
   }
-  
-  const data  = sheet.getDataRange().getValues();
+
+  const data = sheet.getDataRange().getValues();
 
   const start = startDate ? parseDateForComparison(startDate) : new Date('2000-01-01');
-  const end   = endDate   ? parseDateForComparison(endDate)   : new Date('2099-12-31');
+  const end = endDate ? parseDateForComparison(endDate) : new Date('2099-12-31');
   if (startDate) start.setHours(0, 0, 0, 0);
-  if (endDate)   end.setHours(23, 59, 59, 999);
+  if (endDate) end.setHours(23, 59, 59, 999);
 
   const attendance = [];
 
@@ -370,17 +370,17 @@ function getAttendance(activity, startDate, endDate) {
     if (recordDate < start || recordDate > end) continue;
 
     const record = {
-      id:           data[i][COL.ID].toString(),
-      attendeeId:   data[i][COL.ATTENDEE_ID].toString(),
+      id: data[i][COL.ID].toString(),
+      attendeeId: data[i][COL.ATTENDEE_ID].toString(),
       attendeeName: data[i][COL.ATTENDEE_NAME],
-      activity:     data[i][COL.ACTIVITY],
-      date:         formatDateForOutput(data[i][COL.DATE]),
-      timestamp:    data[i][COL.TIMESTAMP]
+      activity: data[i][COL.ACTIVITY],
+      date: formatDateForOutput(data[i][COL.DATE]),
+      timestamp: data[i][COL.TIMESTAMP]
     };
 
     // Include group fields for Circle (mirrors old response shape)
     if (activity === 'Circle') {
-      record.groupId   = data[i][COL.GROUP_ID] ? data[i][COL.GROUP_ID].toString() : null;
+      record.groupId = data[i][COL.GROUP_ID] ? data[i][COL.GROUP_ID].toString() : null;
       record.groupName = data[i][COL.GROUP_NAME] || null;
     }
 
@@ -395,13 +395,13 @@ function getAllAttendance(startDate, endDate) {
   if (!sheet) {
     return { success: false, message: 'Attendance sheet not found' };
   }
-  
-  const data  = sheet.getDataRange().getValues();
+
+  const data = sheet.getDataRange().getValues();
 
   const start = startDate ? parseDateForComparison(startDate) : new Date('2000-01-01');
-  const end   = endDate   ? parseDateForComparison(endDate)   : new Date('2099-12-31');
+  const end = endDate ? parseDateForComparison(endDate) : new Date('2099-12-31');
   if (startDate) start.setHours(0, 0, 0, 0);
-  if (endDate)   end.setHours(23, 59, 59, 999);
+  if (endDate) end.setHours(23, 59, 59, 999);
 
   const allAttendance = [];
 
@@ -413,16 +413,16 @@ function getAllAttendance(startDate, endDate) {
 
     const activity = data[i][COL.ACTIVITY];
     const record = {
-      id:           data[i][COL.ID].toString(),
-      attendeeId:   data[i][COL.ATTENDEE_ID].toString(),
+      id: data[i][COL.ID].toString(),
+      attendeeId: data[i][COL.ATTENDEE_ID].toString(),
       attendeeName: data[i][COL.ATTENDEE_NAME],
       activity,
-      date:         formatDateForOutput(data[i][COL.DATE]),
-      timestamp:    data[i][COL.TIMESTAMP]
+      date: formatDateForOutput(data[i][COL.DATE]),
+      timestamp: data[i][COL.TIMESTAMP]
     };
 
     if (activity === 'Circle') {
-      record.groupId   = data[i][COL.GROUP_ID] ? data[i][COL.GROUP_ID].toString() : null;
+      record.groupId = data[i][COL.GROUP_ID] ? data[i][COL.GROUP_ID].toString() : null;
       record.groupName = data[i][COL.GROUP_NAME] || null;
     }
 
@@ -438,8 +438,8 @@ function getActivitySummary(activity, startDate, endDate) {
   const result = getAttendance(activity, startDate, endDate);
   if (!result.success) return result;
 
-  const attendance   = result.data;
-  const uniqueDates  = [...new Set(attendance.map(a => a.date))];
+  const attendance = result.data;
+  const uniqueDates = [...new Set(attendance.map(a => a.date))];
   const uniqueAttendees = [...new Set(attendance.map(a => a.attendeeId))];
 
   const attendanceByDate = {};
@@ -485,16 +485,16 @@ function getAttendeeSummary(attendeeId, startDate, endDate) {
   const attendeeName = attendeeRecords[0].attendeeName;
 
   const activityBreakdown = {};
-  const activityDates     = {};
+  const activityDates = {};
   for (const activity of VALID_ACTIVITIES) {
     const records = attendeeRecords.filter(a => a.activity === activity);
     activityBreakdown[activity] = records.length;
-    activityDates[activity]     = records.map(a => a.date).sort();
+    activityDates[activity] = records.map(a => a.date).sort();
   }
 
   const monthlyAttendance = {};
   attendeeRecords.forEach(record => {
-    const date     = new Date(record.date);
+    const date = new Date(record.date);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     monthlyAttendance[monthKey] = (monthlyAttendance[monthKey] || 0) + 1;
   });
@@ -559,21 +559,21 @@ function parseDateForComparison(dateValue) {
 
 function formatDateForOutput(dateValue) {
   if (dateValue instanceof Date) {
-    return `${dateValue.getFullYear()}-${String(dateValue.getMonth()+1).padStart(2,'0')}-${String(dateValue.getDate()).padStart(2,'0')}`;
+    return `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, '0')}-${String(dateValue.getDate()).padStart(2, '0')}`;
   }
   if (typeof dateValue === 'number') {
     const d = new Date((dateValue - 25569) * 86400 * 1000);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
   if (typeof dateValue === 'string') {
     if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) return dateValue;
     if (dateValue.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
       const [month, day, year] = dateValue.split('/');
-      return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
     const d = new Date(dateValue);
     if (!isNaN(d.getTime())) {
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
   }
   return String(dateValue);

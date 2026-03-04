@@ -28,12 +28,12 @@ function validateRequired(params, requiredFields) {
       message: 'Invalid parameters object'
     };
   }
-  
+
   const missing = requiredFields.filter(field => {
     const value = params[field];
     return value === undefined || value === null || value === '';
   });
-  
+
   if (missing.length > 0) {
     return {
       isValid: false,

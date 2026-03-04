@@ -81,8 +81,8 @@ function generateReport(quarter, year, centre) {
     const cfgSh = ss.getSheetByName(CONFIG_SHEET_NAME);
     const cfg = {};
     if (cfgSh) {
-      cfgSh.getDataRange().getValues().slice(1).forEach(r => { 
-        if (r[0]) cfg[r[0]] = r[1]; 
+      cfgSh.getDataRange().getValues().slice(1).forEach(r => {
+        if (r[0]) cfg[r[0]] = r[1];
       });
     }
 
@@ -97,7 +97,7 @@ function generateReport(quarter, year, centre) {
 
       const uniq = arr => new Set(arr.map(r => r.attendeeId)).size;
       const uniqueDates = arr => new Set(arr.map(r => r.date)).size;
-      
+
       // Calculate weeks in month more accurately
       const getWeeksInMonth = (month, year) => {
         const firstDay = new Date(year, MONTH_NUM[month] - 1, 1);
@@ -107,7 +107,7 @@ function generateReport(quarter, year, centre) {
         const weeks = Math.ceil((daysInMonth + firstDayOfWeek) / 7);
         return weeks || 4;
       };
-      
+
       const weeksInMonth = getWeeksInMonth(month, Number(year));
       const avgPerWeek = arr => arr.length > 0 ? Math.round(arr.length / weeksInMonth) : 0;
       const uniqueCircles = new Set(circleMonth.map(r => r.groupId)).size;

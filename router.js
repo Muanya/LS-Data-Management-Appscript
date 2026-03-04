@@ -4,19 +4,19 @@ function getRouter(e) {
 
   try {
     let result;
-    
+
     // Route to appropriate handler with validation
     switch (action) {
       // Health check
       case 'health':
         result = safeExecute(getHealth);
         break;
-        
+
       // Activities
       case 'getActivities':
         result = safeExecute(getActivities);
         break;
-        
+
       case 'getActivityGroups':
         const activityGroupsValidation = validateRequired(params, ['activityId']);
         if (!activityGroupsValidation.isValid) {
@@ -25,7 +25,7 @@ function getRouter(e) {
           result = safeExecute(getActivityGroups, params.activityId);
         }
         break;
-        
+
       // Attendee operations
       case 'getAttendees':
         result = safeExecute(getAttendees);
@@ -38,7 +38,7 @@ function getRouter(e) {
           result = safeExecute(searchAttendee, params.name);
         }
         break;
-        
+
       // Attendance operations
       case 'getAttendance':
         const attendanceValidation = validateRequired(params, ['activity']);
@@ -92,7 +92,7 @@ function getRouter(e) {
           }
         }
         break;
-        
+
       // Analytics operations
       case 'getActivitySummary':
         const summaryValidation = validateRequired(params, ['activity']);
@@ -144,7 +144,7 @@ function getRouter(e) {
       case 'getDashboardData':
         result = withPerformanceMonitoring(getDashboardData);
         break;
-        
+
       // Report operations
       case 'getQuarterReport':
         const reportValidation = validateRequired(params, ['quarter', 'year', 'centre']);
@@ -164,21 +164,21 @@ function getRouter(e) {
           }
         }
         break;
-        
+
       default:
         result = createErrorResponse('Invalid action', `Action '${action}' not found`);
     }
 
     // Log API call for monitoring
     logApiCall(action, params, result);
-    
+
     return ContentService.createTextOutput(JSON.stringify(result))
       .setMimeType(ContentService.MimeType.JSON);
-      
+
   } catch (error) {
     const errorResult = createErrorResponse('Internal server error', error);
     logApiCall(action, params, errorResult);
-    
+
     return ContentService.createTextOutput(JSON.stringify(errorResult))
       .setMimeType(ContentService.MimeType.JSON);
   }
@@ -191,7 +191,7 @@ function postRouter(e) {
 
   try {
     let result;
-    
+
     // Route to appropriate POST handler with validation
     switch (action) {
       case 'addAttendee':
@@ -202,7 +202,7 @@ function postRouter(e) {
           result = safeExecute(addAttendee, params);
         }
         break;
-        
+
       case 'addActivityGroup':
         const addActivityGroupValidation = validateRequired(params, ['activityId', 'name']);
         if (!addActivityGroupValidation.isValid) {
@@ -221,7 +221,7 @@ function postRouter(e) {
           result = safeExecute(addActivityGroup, params.activityId, groupData);
         }
         break;
-        
+
       case 'recordAttendance':
         const recordValidation = validateRequired(params, ['attendeeData', 'activity', 'date']);
         if (!recordValidation.isValid) {
@@ -235,7 +235,7 @@ function postRouter(e) {
           }
         }
         break;
-        
+
       case 'removeAttendance':
         const removeValidation = validateRequired(params, ['attendeeId', 'activity', 'date']);
         if (!removeValidation.isValid) {
@@ -249,7 +249,7 @@ function postRouter(e) {
           }
         }
         break;
-        
+
       default:
         result = createErrorResponse('Invalid action', `Action '${action}' not found for POST requests`);
     }
@@ -264,11 +264,11 @@ function postRouter(e) {
 
     return ContentService.createTextOutput(JSON.stringify(result))
       .setMimeType(ContentService.MimeType.JSON);
-      
+
   } catch (error) {
     const errorResult = createErrorResponse('Internal server error', error);
     logApiCall(action, params, errorResult);
-    
+
     return ContentService.createTextOutput(JSON.stringify(errorResult))
       .setMimeType(ContentService.MimeType.JSON);
   }
