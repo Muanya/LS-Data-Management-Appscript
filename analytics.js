@@ -31,10 +31,10 @@ function getDashboardData() {
         id: config.id,
         name: config.name,
         color: config.color,
-        stats: getActivityStats(config.id)
+        stats: getActivityStats(activityKey)
       };
     }),
-    trends:        getWeeklyTrends(),
+    trends: getSessionTrends(),
     crossActivity: getCrossActivityData(),
     lastUpdated:   new Date().toISOString()
   };
@@ -124,12 +124,127 @@ function getSummaryStats() {
   };
 }
 
-function getWeeklyTrends() {
-  const trends = { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [] };
-  for (const activity of VALID_ACTIVITIES) {
-    trends.datasets.push({ label: activity, data: Array(7).fill(0), borderColor: getRandomColor() });
+function getSessionTrends() {
+  const sheet = getSheetSafe(SHEET_NAME_ATTENDANCE);
+  const sessionData = new Map();
+
+  if (sheet && sheet.getLastRow() > 1) {
+    const data = sheet.getDataRange().getValues().slice(1);
+    
+    data.forEach(row => {
+      const activity = row[COL.ACTIVITY];
+      const date = formatDateForOutput(row[COL.DATE]);
+      const sessionKey = `${activity}_${date}`;
+      
+      if (!sessionData.has(sessionKey)) {
+        sessionData.set(sessionKey, {
+          activity,
+          date,
+          attendees: new Set(),
+          timestamp: row[COL.TIMESTAMP]
+        });
+      }
+      
+      sessionData.get(sessionKey).attendees.add(row[COL.ATTENDEE_ID]);
+    });
   }
-  return trends;
+
+  // Convert to array and sort by date
+  const sessions = Array.from(sessionData.values())
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // Group sessions by activity for trend analysis
+  const trends = { labels: [], datasets: [] };
+  const activitySessions = {};
+  
+  // Organize sessions by activity
+  sessions.forEach(session => {
+    if (!activitySessions[session.activity]) {
+      activitySessions[session.activity] = [];
+    }
+    activitySessions[session.activity].push(session);
+  });
+
+  // Create datasets for each activity
+  for (const activity of VALID_ACTIVITIES) {
+    const activitySessionList = activitySessions[activity] || [];
+    const attendanceData = activitySessionList.map(session => session.attendees.size);
+    const sessionLabels = activitySessionList.map(session => {
+      const date = new Date(session.date);
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    });
+
+    trends.datasets.push({
+      label: activity,
+      data: attendanceData,
+      borderColor: getActivityColor(activity),
+      backgroundColor: getActivityColor(activity) + '20',
+      sessions: activitySessionList.length,
+      totalAttendance: attendanceData.reduce((sum, count) => sum + count, 0),
+      averageAttendance: attendanceData.length > 0 ? 
+        Math.round(attendanceData.reduce((sum, count) => sum + count, 0) / attendanceData.length) : 0
+    });
+  }
+
+  // Create unified labels from all session dates
+  const allSessionDates = [...new Set(sessions.map(session => {
+    const date = new Date(session.date);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }))].sort((a, b) => {
+    const [aMonth, aDay] = a.split('/').map(Number);
+    const [bMonth, bDay] = b.split('/').map(Number);
+    const dateA = new Date(2024, aMonth - 1, aDay);
+    const dateB = new Date(2024, bMonth - 1, bDay);
+    return dateA - dateB;
+  });
+  
+  trends.labels = allSessionDates.slice(-20); // Show last 20 sessions
+
+  // Calculate overall statistics
+  const totalSessions = sessions.length;
+  const totalAttendance = sessions.reduce((sum, session) => sum + session.attendees.size, 0);
+  const averageSessionAttendance = totalSessions > 0 ? Math.round(totalAttendance / totalSessions) : 0;
+
+  return {
+    trends,
+    summary: {
+      totalSessions,
+      totalAttendance,
+      averageSessionAttendance,
+      mostRecentSession: sessions[sessions.length - 1] || null,
+      sessionGrowth: calculateSessionGrowth(sessions)
+    }
+  };
+}
+
+function getActivityColor(activity) {
+  const colors = {
+    'Circle': '#3B82F6',
+    'Workshop': '#10B981', 
+    'Mentorship': '#F59E0B',
+    'Event': '#EF4444',
+    'Study Group': '#8B5CF6',
+    'Service': '#EC4899'
+  };
+  return colors[activity] || '#6B7280';
+}
+
+function calculateSessionGrowth(sessions) {
+  if (sessions.length < 2) return 'Insufficient data';
+  
+  const recentSessions = sessions.slice(-5); // Last 5 sessions
+  const previousSessions = sessions.slice(-10, -5); // Previous 5 sessions
+  
+  if (previousSessions.length === 0) return 'Insufficient data';
+  
+  const recentAvg = recentSessions.reduce((sum, session) => sum + session.attendees.size, 0) / recentSessions.length;
+  const previousAvg = previousSessions.reduce((sum, session) => sum + session.attendees.size, 0) / previousSessions.length;
+  
+  const growth = ((recentAvg - previousAvg) / previousAvg) * 100;
+  
+  if (growth > 10) return 'Growing';
+  if (growth < -10) return 'Declining';
+  return 'Stable';
 }
 
 function getCrossActivityData() {
