@@ -111,13 +111,13 @@ Update `.clasp.json` with your script ID:
 ### Attendees
 - `GET /?action=getAttendees` - List all attendees
 - `GET /?action=searchAttendee&name=<name>` - Search attendees
-- `POST /?action=addAttendee` - Add new attendee
+- `POST /?action=addAttendee` - Add new attendee (form data)
 
 ### Attendance
 - `GET /?action=getAttendance&activity=<type>` - Get attendance by activity
 - `GET /?action=getAllAttendance` - Get all attendance records
-- `POST /?action=recordAttendance` - Record attendance
-- `POST /?action=removeAttendance` - Remove attendance record
+- `POST /?action=recordAttendance` - Record attendance (form data)
+- `POST /?action=removeAttendance` - Remove attendance record (form data)
 
 ### Analytics
 - `GET /?action=getDashboardData` - Dashboard metrics
@@ -288,19 +288,21 @@ Use the `addActivityGroup` endpoint to create new groups:
 **Method**: `POST`
 **URL**: `/?action=addActivityGroup`
 
-**Request Body** (form data or JSON):
-```json
-{
-  "activityId": "circles",
-  "name": "Circle Group A",
-  "capacity": 20,
-  "isActive": true,
-  "level": "standard",
-  "day": "saturday",
-  "location": "Room A",
-  "instructor": "John Doe",
-  "secondInstructor": "Jane Smith"
-}
+**Request Format**: URLSearchParams/Form Data (used for all POST methods in this Apps Script)
+
+```javascript
+const body = new URLSearchParams({
+  action: 'addActivityGroup',
+  activityId: 'circles',
+  name: 'Circle Group A',
+  capacity: '20',
+  isActive: 'true',
+  level: 'standard',
+  day: 'saturday',
+  location: 'Room A',
+  instructor: 'John Doe',
+  secondInstructor: 'Jane Smith'
+});
 ```
 
 **Required Parameters**:
@@ -315,6 +317,8 @@ Use the `addActivityGroup` endpoint to create new groups:
 - `location` - Meeting location
 - `instructor` - Primary instructor
 - `secondInstructor` - Secondary instructor
+
+**Note**: This Google Apps Script application uses URLSearchParams/form data format for all POST requests for consistency.
 
 ### Adding New Categories
 
@@ -339,6 +343,20 @@ No other files need to be changed - the system will automatically:
 -- Include in reports and analytics as configured
 
 ## 📝 Data Structure
+
+### Request Format for POST Methods
+
+All POST endpoints in this Google Apps Script application use **URLSearchParams/form data** format:
+
+```javascript
+const body = new URLSearchParams({
+  action: 'endpointName',
+  param1: 'value1',
+  param2: 'value2'
+});
+```
+
+**Content-Type**: `application/x-www-form-urlencoded`
 
 ### Attendance Records
 ```
