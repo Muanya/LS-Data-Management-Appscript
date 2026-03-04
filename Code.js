@@ -31,7 +31,7 @@ const ACTIVITY_CONFIG = {
     id: 'circles',
     name: 'Circles',
     displayName: 'Number of circles (prep classes)',
-    category: 'Educational',
+    category: 'Doctrinal',
     frequency: 'Weekly',
     type: 'grouped',
     icon: 'Users',
@@ -81,10 +81,10 @@ const ACTIVITY_CONFIG = {
     aggregationMethod: 'count'
   },
   Doctrine: {
-    id: 'doctrine',
-    name: 'Doctrine',
+    id: 'doctrineClasses',
+    name: 'Doctrine Classes',
     displayName: 'Doctrine classes',
-    category: 'Educational',
+    category: 'Doctrinal',
     frequency: 'Weekly',
     type: 'simple',
     icon: 'Book',
@@ -106,9 +106,9 @@ const ACTIVITY_CATEGORIES = {
     name: 'Spiritual Activities',
     displayOrder: 1
   },
-  Educational: {
-    id: 'educational',
-    name: 'Educational Activities',
+  Doctrinal: {
+    id: 'doctrinal',
+    name: 'Doctrinal Activities',
     displayOrder: 2
   }
 };
