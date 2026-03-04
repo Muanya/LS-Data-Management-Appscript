@@ -4,7 +4,26 @@ function getHealth() {
 }
 
 function getActivities() {
-  const activities = Object.values(ACTIVITY_CONFIG);
+  const activities = Object.values(ACTIVITY_CONFIG).map(activity => ({
+    id: activity.id,
+    name: activity.name,
+    displayName: activity.displayName,
+    category: activity.category,
+    frequency: activity.frequency,
+    type: activity.type,
+    icon: activity.icon,
+    color: activity.color,
+    dataType: activity.dataType,
+    reportKey: activity.reportKey,
+    displayOrder: activity.displayOrder,
+    requiresGroup: activity.requiresGroup || false,
+    groupType: activity.groupType,
+    allowMultipleGroups: activity.allowMultipleGroups || false,
+    includeInQuarterReport: activity.includeInQuarterReport,
+    includeInAttendanceTracking: activity.includeInAttendanceTracking,
+    aggregationMethod: activity.aggregationMethod
+  }));
+  
   const categories = Object.values(ACTIVITY_CATEGORIES);
   
   return { 
@@ -85,6 +104,89 @@ function getActivityGroupsUnified(activityKey, activityId) {
   }
   
   return groups;
+}
+
+function addActivityGroup(activityId, groupData) {
+  // Validate activityId exists in our configuration
+  const activityConfig = Object.values(ACTIVITY_CONFIG).find(activity => activity.id === activityId);
+  if (!activityConfig) {
+    return { success: false, message: 'Invalid activity ID' };
+  }
+  
+  // Check if activity supports groups
+  if (!activityConfig.requiresGroup) {
+    return { success: false, message: 'Activity does not support groups' };
+  }
+  
+  // Get activity key from config (e.g., 'circles' -> 'Circle')
+  const activityKey = Object.keys(ACTIVITY_CONFIG).find(key => ACTIVITY_CONFIG[key].id === activityId);
+  const sheetName = ACTIVITY_GROUP_SHEETS[activityKey];
+  
+  if (!sheetName) {
+    return { success: false, message: 'Activity group sheet not configured' };
+  }
+  
+  const sheet = getSheetSafe(sheetName);
+  if (!sheet) {
+    return { success: false, message: 'Group sheet not found' };
+  }
+  
+  // Validate required fields
+  const { name, capacity, isActive, level, day, location, instructor, secondInstructor } = groupData;
+  if (!name || name.trim() === '') {
+    return { success: false, message: 'Group name is required' };
+  }
+  
+  // Check for duplicate names
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1] && data[i][1].toLowerCase().trim() === name.toLowerCase().trim()) {
+      return {
+        success: false,
+        message: 'Group with this name already exists',
+        data: { id: data[i][0].toString(), name: data[i][1] }
+      };
+    }
+  }
+  
+  // Add new group
+  const id = new Date().getTime().toString();
+  const createdDate = new Date();
+  const updatedDate = new Date();
+  
+  sheet.appendRow([
+    id,
+    name.trim(),
+    createdDate,
+    capacity || 20,
+    isActive !== undefined ? Boolean(isActive) : true,
+    level || 'standard',
+    day || 'varies',
+    location || '',
+    instructor || '',
+    secondInstructor || ''
+  ]);
+  
+  return {
+    success: true,
+    message: 'Activity group added successfully',
+    data: {
+      id,
+      name: name.trim(),
+      activityId,
+      activityType: activityKey.toLowerCase(),
+      capacity: capacity || 20,
+      isActive: isActive !== undefined ? Boolean(isActive) : true,
+      metadata: {
+        level: level || 'standard',
+        day: day || 'varies',
+        location: location || '',
+        instructor: instructor || '',
+        secondInstructor: secondInstructor || ''
+      },
+      createdAt: createdDate.toISOString()
+    }
+  };
 }
 
 function getAttendees() {

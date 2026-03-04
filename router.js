@@ -26,6 +26,25 @@ function getRouter(e) {
         }
         break;
         
+      case 'addActivityGroup':
+        const addActivityGroupValidation = validateRequired(params, ['activityId', 'name']);
+        if (!addActivityGroupValidation.isValid) {
+          result = createErrorResponse(addActivityGroupValidation.message);
+        } else {
+          const groupData = {
+            name: params.name,
+            capacity: params.capacity,
+            isActive: params.isActive,
+            level: params.level,
+            day: params.day,
+            location: params.location,
+            instructor: params.instructor,
+            secondInstructor: params.secondInstructor
+          };
+          result = safeExecute(addActivityGroup, params.activityId, groupData);
+        }
+        break;
+        
       // Attendee operations
       case 'getAttendees':
         result = safeExecute(getAttendees);
@@ -244,7 +263,7 @@ function postRouter(e) {
     }
 
     // Clear dashboard cache for data-modifying operations
-    if (result.success && ['addAttendee', 'recordAttendance', 'removeAttendance'].includes(action)) {
+    if (result.success && ['addAttendee', 'addActivityGroup', 'recordAttendance', 'removeAttendance'].includes(action)) {
       clearCache(DASHBOARD_CACHE_KEY);
     }
 

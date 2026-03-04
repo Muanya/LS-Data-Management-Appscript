@@ -104,8 +104,9 @@ Update `.clasp.json` with your script ID:
 - `GET /?action=health` - Service health status
 
 ### Activities
-- `GET /?action=getActivities` - List all activities with comprehensive metadata and categories
+- `GET /?action=getActivities` - List all activities with metadata and categories
 - `GET /?action=getActivityGroups&activityId=<activityId>` - Get groups for a specific activity
+- `GET /?action=addActivityGroup&activityId=<activityId>&name=<name>&capacity=<capacity>&isActive=<isActive>&level=<level>&day=<day>&location=<location>&instructor=<instructor>&secondInstructor=<secondInstructor>` - Add new activity group
 
 ### Attendees
 - `GET /?action=getAttendees` - List all attendees
@@ -245,13 +246,13 @@ const ACTIVITY_GROUP_SHEETS = {
 ### Activity Metadata
 Each activity includes comprehensive metadata:
 - **Display Name**: Human-readable name for reports
-- **Icon & Styling**: Visual representation with colors and gradients
+- **Icon & Styling**: Visual representation with colors
 - **Data Type**: How data should be processed (number/grouped)
 - **Aggregation**: How to calculate totals (count/sum/average)
 - **Group Support**: Whether group information is required
 - **Report Integration**: Inclusion in quarterly reports
 
-### Adding New Activities
+#### Adding New Activities
 
 To add a new activity, update `ACTIVITY_CONFIG` in `Code.js`:
 
@@ -267,7 +268,6 @@ const ACTIVITY_CONFIG = {
     type: 'simple', // 'simple' or 'grouped'
     icon: 'IconName',
     color: '#hex-color',
-    gradient: 'from-color-500 to-color-500',
     dataType: 'number', // 'number' or 'grouped'
     reportKey: 'reportKey',
     displayOrder: 16, // Sort order
@@ -280,6 +280,27 @@ const ACTIVITY_CONFIG = {
   }
 };
 ```
+
+#### Adding Activity Groups
+
+Use the `addActivityGroup` endpoint to create new groups:
+
+```
+GET /?action=addActivityGroup&activityId=circles&name=Circle Group A&capacity=15&isActive=true&level=beginner&day=saturday&location=Room A&instructor=John Doe&secondInstructor=Jane Smith
+```
+
+**Required Parameters**:
+- `activityId` - Activity identifier (e.g., 'circles')
+- `name` - Group name
+
+**Optional Parameters**:
+- `capacity` - Maximum participants (default: 20)
+- `isActive` - Active status (default: true)
+- `level` - Group level (default: 'standard')
+- `day` - Meeting day (default: 'varies')
+- `location` - Meeting location
+- `instructor` - Primary instructor
+- `secondInstructor` - Secondary instructor
 
 ### Adding New Categories
 
@@ -297,11 +318,11 @@ const ACTIVITY_CATEGORIES = {
 ```
 
 No other files need to be changed - the system will automatically:
-- Validate new activity types
-- Include them in activity lists with proper sorting
-- Handle group requirements if specified
-- Apply appropriate styling with colors and gradients
-- Include in reports and analytics as configured
+-- Validate new activity types
+-- Include them in activity lists with proper sorting
+-- Handle group requirements if specified
+-- Apply appropriate styling with colors
+-- Include in reports and analytics as configured
 
 ## 📝 Data Structure
 
