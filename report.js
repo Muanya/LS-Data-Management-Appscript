@@ -22,12 +22,14 @@ function inMonth(dateStr, month, yr) {
 
 // Load all attendance rows from the single table, filtered by activity
 function loadActivity(activity) {
-  const ss = getSpreadsheet();
-  const tz = Session.getScriptTimeZone();
-  const sh = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
-  if (!sh) return [];
+  const sheet = getSpreadsheet().getSheetByName(SHEET_NAME_ATTENDANCE);
+  if (!sheet) {
+    console.error(`Sheet '${SHEET_NAME_ATTENDANCE}' not found`);
+    return [];
+  }
 
-  return sh.getDataRange().getValues().slice(1)
+  const tz = Session.getScriptTimeZone();
+  return sheet.getDataRange().getValues().slice(1)
     .filter(r => r[COL.ACTIVITY] === activity)
     .map(r => {
       const d = parseDate(r[COL.DATE]);
@@ -44,9 +46,15 @@ function loadActivity(activity) {
 
 function catBreakdown(cfg) {
   const parts = [];
-  if (cfg["catLakeside"] !== undefined) parts.push("Lakeside – " + cfg["catLakeside"]);
-  if (cfg["catKC"] !== undefined) parts.push("KC – " + cfg["catKC"]);
-  if (cfg["catFSTC"] !== undefined) parts.push("FSTC – " + cfg["catFSTC"]);
+  if (cfg["catLakeside"] !== undefined && cfg["catLakeside"] !== null) {
+    parts.push("Lakeside – " + cfg["catLakeside"]);
+  }
+  if (cfg["catKC"] !== undefined && cfg["catKC"] !== null) {
+    parts.push("KC – " + cfg["catKC"]);
+  }
+  if (cfg["catFSTC"] !== undefined && cfg["catFSTC"] !== null) {
+    parts.push("FSTC – " + cfg["catFSTC"]);
+  }
   return parts.join("\n") || "—";
 }
 
@@ -54,6 +62,14 @@ function generateReport(quarter, year, centre) {
   try {
     const ss = getSpreadsheet();
     const months = QUARTER_MONTHS[quarter];
+
+    if (!months) {
+      return { error: 'Invalid quarter. Must be Q1, Q2, Q3, or Q4' };
+    }
+
+    if (!year || isNaN(year)) {
+      return { error: 'Invalid year. Must be a valid number' };
+    }
 
     // Single-table reads per activity (replaces loadSheet with per-sheet logic)
     const medRows = loadActivity('Med');
@@ -65,7 +81,9 @@ function generateReport(quarter, year, centre) {
     const cfgSh = ss.getSheetByName(CONFIG_SHEET_NAME);
     const cfg = {};
     if (cfgSh) {
-      cfgSh.getDataRange().getValues().slice(1).forEach(r => { cfg[r[0]] = r[1]; });
+      cfgSh.getDataRange().getValues().slice(1).forEach(r => { 
+        if (r[0]) cfg[r[0]] = r[1]; 
+      });
     }
 
     const monthStats = months.map(month => {
@@ -79,7 +97,19 @@ function generateReport(quarter, year, centre) {
 
       const uniq = arr => new Set(arr.map(r => r.attendeeId)).size;
       const uniqueDates = arr => new Set(arr.map(r => r.date)).size;
-      const avgPerWeek = arr => arr.length > 0 ? Math.round(arr.length / 4) : 0;
+      
+      // Calculate weeks in month more accurately
+      const getWeeksInMonth = (month, year) => {
+        const firstDay = new Date(year, MONTH_NUM[month] - 1, 1);
+        const lastDay = new Date(year, MONTH_NUM[month], 0);
+        const daysInMonth = lastDay.getDate();
+        const firstDayOfWeek = firstDay.getDay();
+        const weeks = Math.ceil((daysInMonth + firstDayOfWeek) / 7);
+        return weeks || 4;
+      };
+      
+      const weeksInMonth = getWeeksInMonth(month, Number(year));
+      const avgPerWeek = arr => arr.length > 0 ? Math.round(arr.length / weeksInMonth) : 0;
       const uniqueCircles = new Set(circleMonth.map(r => r.groupId)).size;
 
       return {
@@ -109,6 +139,7 @@ function generateReport(quarter, year, centre) {
 
     return { success: true, data: { centre, quarter, year, months: monthStats } };
   } catch (err) {
+    console.error('Error generating report:', err);
     return { error: err.message };
   }
 }

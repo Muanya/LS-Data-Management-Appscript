@@ -2,6 +2,22 @@ function getSpreadsheet() {
   return SpreadsheetApp.getActiveSpreadsheet();
 }
 
+// Helper function to get sheet with error handling
+function getSheetSafe(sheetName) {
+  try {
+    const ss = getSpreadsheet();
+    const sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      console.error(`Sheet '${sheetName}' not found`);
+      return null;
+    }
+    return sheet;
+  } catch (error) {
+    console.error(`Error accessing sheet '${sheetName}': ${error.message}`);
+    return null;
+  }
+}
+
 function getDashboardData() {
   const cache  = CacheService.getScriptCache();
   const cached = cache.get(DASHBOARD_CACHE_KEY);
@@ -21,8 +37,7 @@ function getDashboardData() {
 
 // Single-pass read of the Attendance sheet, filtered by activity
 function getActivityStats(activity) {
-  const ss    = getSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
+  const sheet = getSheetSafe(SHEET_NAME_ATTENDANCE);
 
   if (!sheet || sheet.getLastRow() <= 1) {
     return { totalAttendees: 0, attendanceRate: '0%', peakTime: 'N/A', topAttendee: 'N/A', dailyAverage: 0, uniqueAttendees: 0 };
@@ -37,13 +52,15 @@ function getActivityStats(activity) {
   }
 
   const uniqueAttendees = new Set(rows.map(row => row[COL.ATTENDEE_ID]));
+  const uniqueDates = new Set(rows.map(row => formatDateForOutput(row[COL.DATE])));
+  const daysInPeriod = uniqueDates.size || 1;
 
   const timeCounts = {};
   rows.forEach(row => {
-    const time = row[COL.DATE];
-    timeCounts[time] = (timeCounts[time] || 0) + 1;
+    const date = formatDateForOutput(row[COL.DATE]);
+    timeCounts[date] = (timeCounts[date] || 0) + 1;
   });
-  const peakTime = Object.entries(timeCounts).reduce((a, b) => a[1] > b[1] ? a : b, ['N/A', 0])[0];
+  const peakDate = Object.entries(timeCounts).reduce((a, b) => a[1] > b[1] ? a : b, ['N/A', 0])[0];
 
   const attendeeCounts = {};
   rows.forEach(row => {
@@ -52,29 +69,47 @@ function getActivityStats(activity) {
   });
   const topAttendeeId = Object.entries(attendeeCounts).reduce((a, b) => a[1] > b[1] ? a : b, ['', 0])[0];
 
+  // Calculate attendance rate based on unique attendees per session
+  const avgAttendancePerSession = daysInPeriod > 0 ? rows.length / daysInPeriod : 0;
+  const attendanceRate = uniqueAttendees.size > 0 ? 
+    Math.round((avgAttendancePerSession / uniqueAttendees.size) * 100) : 0;
+
   return {
     totalAttendees:   rows.length,
-    attendanceRate:   `${Math.round((rows.length / 100) * 100)}%`,
-    peakTime,
+    attendanceRate:   `${attendanceRate}%`,
+    peakTime:        peakDate,
     topAttendee:      getAttendeeName(topAttendeeId) || 'N/A',
-    dailyAverage:     Math.round(rows.length / 30),
+    dailyAverage:     Math.round(rows.length / daysInPeriod),
     uniqueAttendees:  uniqueAttendees.size
   };
 }
 
 function getSummaryStats() {
-  const sheet = getSpreadsheet().getSheetByName(SHEET_NAME_ATTENDANCE);
+  const sheet = getSheetSafe(SHEET_NAME_ATTENDANCE);
   if (!sheet || sheet.getLastRow() <= 1) {
     return { totalParticipants: 0, totalRecords: 0, avgAttendanceRate: '0%', mostPopularActivity: 'N/A', peakHours: 'N/A', crossActivityRate: '0%' };
   }
 
   const data             = sheet.getDataRange().getValues().slice(1);
   const uniqueAttendees  = new Set(data.map(row => row[COL.ATTENDEE_ID]));
+  
+  // Calculate actual average attendance rate across all activities
+  let totalAttendanceRate = 0;
+  let activityCount = 0;
+  for (const activity of VALID_ACTIVITIES) {
+    const stats = getActivityStats(activity);
+    const rate = parseInt(stats.attendanceRate) || 0;
+    if (rate > 0) {
+      totalAttendanceRate += rate;
+      activityCount++;
+    }
+  }
+  const avgRate = activityCount > 0 ? Math.round(totalAttendanceRate / activityCount) : 0;
 
   return {
     totalParticipants:  uniqueAttendees.size,
     totalRecords:       data.length,
-    avgAttendanceRate:  '82%',
+    avgAttendanceRate:  `${avgRate}%`,
     mostPopularActivity: getMostPopularActivity(),
     peakHours:          getPeakHours(),
     crossActivityRate:  getCrossActivityRate()
@@ -90,7 +125,7 @@ function getWeeklyTrends() {
 }
 
 function getCrossActivityData() {
-  const sheet = getSpreadsheet().getSheetByName(SHEET_NAME_ATTENDANCE);
+  const sheet = getSheetSafe(SHEET_NAME_ATTENDANCE);
   const attendeesMap = new Map();
 
   if (sheet && sheet.getLastRow() > 1) {
@@ -103,6 +138,7 @@ function getCrossActivityData() {
     });
   }
 
+  const totalAttendees = attendeesMap.size || 1;
   const multiActivityAttendees = Array.from(attendeesMap.entries())
     .filter(([_, acts]) => acts.size > 1)
     .map(([attendeeId, acts]) => ({
@@ -126,10 +162,12 @@ function getCrossActivityData() {
     }
   }
 
+  const crossActivityRate = Math.round((multiActivityAttendees.length / totalAttendees) * 100);
+
   return {
     multiActivityAttendees: multiActivityAttendees.slice(0, 10),
     activityOverlaps,
-    crossActivityRate: `${Math.round((multiActivityAttendees.length / (attendeesMap.size || 1)) * 100)}%`
+    crossActivityRate: `${crossActivityRate}%`
   };
 }
 
@@ -149,11 +187,20 @@ function calculateActivityOverlap(activityA, activityB, attendeesMap) {
 }
 
 function getAttendeeName(attendeeId) {
-  const sheet = getSpreadsheet().getSheetByName(SHEET_NAME_ATTENDEES);
-  if (!sheet) return null;
-  const data = sheet.getDataRange().getValues();
-  const row  = data.find(r => r[0].toString() === attendeeId);
-  return row ? `${row[1]} ${row[2]}` : null;
+  // Cache attendee names to avoid repeated sheet reads
+  if (!global.attendeeNameCache) {
+    global.attendeeNameCache = new Map();
+    const sheet = getSheetSafe(SHEET_NAME_ATTENDEES);
+    if (sheet) {
+      const data = sheet.getDataRange().getValues();
+      data.slice(1).forEach(row => {
+        if (row[0]) {
+          global.attendeeNameCache.set(row[0].toString(), `${row[1] || ''} ${row[2] || ''}`.trim());
+        }
+      });
+    }
+  }
+  return global.attendeeNameCache.get(attendeeId) || null;
 }
 
 function getMostPopularActivity() {

@@ -3,6 +3,19 @@ function getHealth() {
   return { success: true, data: "Health is Okay" };
 }
 
+function getActivities() {
+  const activities = Object.values(ACTIVITY_CONFIG);
+  const categories = Object.values(ACTIVITY_CATEGORIES);
+  
+  return { 
+    success: true, 
+    data: {
+      activities: activities.sort((a, b) => a.displayOrder - b.displayOrder),
+      categories: categories.sort((a, b) => a.displayOrder - b.displayOrder)
+    }
+  };
+}
+
 function getAttendees() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME_ATTENDEES);
@@ -199,7 +212,12 @@ function removeAttendance(attendeeId, activity, date, groupId) {
 
   const ss   = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
+  if (!sheet) {
+    return { success: false, message: 'Attendance sheet not found' };
+  }
+  
   const data  = sheet.getDataRange().getValues();
+  let deletedCount = 0;
 
   // Scan bottom-up so row deletion doesn't shift indices
   for (let i = data.length - 1; i >= 1; i--) {
@@ -208,16 +226,22 @@ function removeAttendance(attendeeId, activity, date, groupId) {
     const rowDate       = data[i][COL.DATE];
     const rowGroupId    = data[i][COL.GROUP_ID];
 
-    if (rowActivity != activity) continue;
-    if (rowAttendeeId != attendeeId) continue;
-    if (rowDate != date) continue;
-    if (activity === 'Circle' && rowGroupId != groupId) continue;
+    // Convert to strings for comparison to handle type mismatches
+    if (String(rowActivity) !== String(activity)) continue;
+    if (String(rowAttendeeId) !== String(attendeeId)) continue;
+    if (String(rowDate) !== String(date)) continue;
+    if (activity === 'Circle' && String(rowGroupId) !== String(groupId)) continue;
 
     sheet.deleteRow(i + 1);
-    return { success: true, message: 'Attendance removed successfully' };
+    deletedCount++;
+    
+    // Only delete one record per call to be safe
+    break;
   }
 
-  return { success: false, message: 'Attendance record not found' };
+  return deletedCount > 0 
+    ? { success: true, message: 'Attendance removed successfully' }
+    : { success: false, message: 'Attendance record not found' };
 }
 
 function getAttendance(activity, startDate, endDate) {
@@ -225,8 +249,11 @@ function getAttendance(activity, startDate, endDate) {
     return { success: false, message: 'Invalid activity' };
   }
 
-  const ss    = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
+  const sheet = getSheetSafe(SHEET_NAME_ATTENDANCE);
+  if (!sheet) {
+    return { success: false, message: 'Attendance sheet not found' };
+  }
+  
   const data  = sheet.getDataRange().getValues();
 
   const start = startDate ? parseDateForComparison(startDate) : new Date('2000-01-01');
@@ -254,8 +281,8 @@ function getAttendance(activity, startDate, endDate) {
 
     // Include group fields for Circle (mirrors old response shape)
     if (activity === 'Circle') {
-      record.groupId   = data[i][COL.GROUP_ID].toString();
-      record.groupName = data[i][COL.GROUP_NAME];
+      record.groupId   = data[i][COL.GROUP_ID] ? data[i][COL.GROUP_ID].toString() : null;
+      record.groupName = data[i][COL.GROUP_NAME] || null;
     }
 
     attendance.push(record);
@@ -265,8 +292,11 @@ function getAttendance(activity, startDate, endDate) {
 }
 
 function getAllAttendance(startDate, endDate) {
-  const ss    = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
+  const sheet = getSheetSafe(SHEET_NAME_ATTENDANCE);
+  if (!sheet) {
+    return { success: false, message: 'Attendance sheet not found' };
+  }
+  
   const data  = sheet.getDataRange().getValues();
 
   const start = startDate ? parseDateForComparison(startDate) : new Date('2000-01-01');
@@ -293,8 +323,8 @@ function getAllAttendance(startDate, endDate) {
     };
 
     if (activity === 'Circle') {
-      record.groupId   = data[i][COL.GROUP_ID].toString();
-      record.groupName = data[i][COL.GROUP_NAME];
+      record.groupId   = data[i][COL.GROUP_ID] ? data[i][COL.GROUP_ID].toString() : null;
+      record.groupName = data[i][COL.GROUP_NAME] || null;
     }
 
     allAttendance.push(record);

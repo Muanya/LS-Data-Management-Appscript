@@ -6,11 +6,112 @@ const DASHBOARD_CACHE_KEY = 'dashboard_data';
 
 // Add new activities here ONLY — no other files need to change
 const ACTIVITY_CONFIG = {
-  Med:          { color: '#0f9d58' },
-  Circle:       { color: '#f4b400' },
-  Recollection: { color: '#db4437' },
-  Retreat:      { color: '#4285f4' },
-  Doctrine:     { color: '#f49c42' }
+  Med: {
+    id: 'meditations',
+    name: 'Meditations',
+    displayName: 'Number of meditations held',
+    category: 'Spiritual',
+    frequency: 'Weekly',
+    type: 'simple',
+    icon: 'Moon',
+    color: '#0f9d58',
+    gradient: 'from-green-500 to-emerald-500',
+    dataType: 'number',
+    reportKey: 'numMeditations',
+    displayOrder: 12,
+    requiresGroup: false,
+    includeInQuarterReport: true,
+    includeInAttendanceTracking: true,
+    aggregationMethod: 'count'
+  },
+  Circle: {
+    id: 'circles',
+    name: 'Circles',
+    displayName: 'Number of circles (prep classes)',
+    category: 'Educational',
+    frequency: 'Weekly',
+    type: 'grouped',
+    icon: 'Users',
+    color: '#f4b400',
+    gradient: 'from-yellow-500 to-orange-500',
+    dataType: 'grouped',
+    reportKey: 'numCircles',
+    displayOrder: 6,
+    requiresGroup: true,
+    groupType: 'circle',
+    allowMultipleGroups: true,
+    includeInQuarterReport: true,
+    includeInAttendanceTracking: true,
+    aggregationMethod: 'sum'
+  },
+  Recollection: {
+    id: 'recollections',
+    name: 'Recollections',
+    displayName: 'Monthly recollections',
+    category: 'Spiritual',
+    frequency: 'Monthly',
+    type: 'simple',
+    icon: 'Calendar',
+    color: '#db4437',
+    gradient: 'from-red-500 to-pink-500',
+    dataType: 'number',
+    reportKey: 'numMonthlyRetreats',
+    displayOrder: 8,
+    requiresGroup: false,
+    includeInQuarterReport: true,
+    includeInAttendanceTracking: true,
+    aggregationMethod: 'count'
+  },
+  Retreat: {
+    id: 'retreats',
+    name: 'Retreats',
+    displayName: 'Long retreats',
+    category: 'Spiritual',
+    frequency: 'Quarterly',
+    type: 'simple',
+    icon: 'Mountain',
+    color: '#4285f4',
+    gradient: 'from-blue-500 to-indigo-500',
+    dataType: 'number',
+    reportKey: 'numLongRetreats',
+    displayOrder: 10,
+    requiresGroup: false,
+    includeInQuarterReport: true,
+    includeInAttendanceTracking: true,
+    aggregationMethod: 'count'
+  },
+  Doctrine: {
+    id: 'doctrine',
+    name: 'Doctrine',
+    displayName: 'Doctrine classes',
+    category: 'Educational',
+    frequency: 'Weekly',
+    type: 'simple',
+    icon: 'Book',
+    color: '#f49c42',
+    gradient: 'from-orange-500 to-amber-500',
+    dataType: 'number',
+    reportKey: 'numDoctrineCls',
+    displayOrder: 14,
+    requiresGroup: false,
+    includeInQuarterReport: true,
+    includeInAttendanceTracking: true,
+    aggregationMethod: 'count'
+  }
+};
+
+// Activity categories configuration
+const ACTIVITY_CATEGORIES = {
+  Spiritual: {
+    id: 'spiritual',
+    name: 'Spiritual Activities',
+    displayOrder: 1
+  },
+  Educational: {
+    id: 'educational',
+    name: 'Educational Activities',
+    displayOrder: 2
+  }
 };
 
 const VALID_ACTIVITIES = new Set(Object.keys(ACTIVITY_CONFIG));
