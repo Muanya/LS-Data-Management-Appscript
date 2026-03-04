@@ -110,54 +110,6 @@ function getAttendees() {
   return { success: true, data: attendees };
 }
 
-function getCircleGroups() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME_CIRCLE_GROUPS);
-  const data = sheet.getDataRange().getValues();
-
-  const groups = [];
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0]) {
-      groups.push({ id: data[i][0].toString(), name: data[i][1] });
-    }
-  }
-  return { success: true, data: groups };
-}
-
-function searchCircleGroup(name) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME_CIRCLE_GROUPS);
-  const data = sheet.getDataRange().getValues();
-  const searchName = name.toLowerCase().trim();
-  const matches = [];
-
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][1] && data[i][1].toLowerCase().includes(searchName)) {
-      matches.push({ id: data[i][0].toString(), name: data[i][1] });
-    }
-  }
-  return { success: true, data: matches };
-}
-
-function searchAttendee(name) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDEES);
-  const data = sheet.getDataRange().getValues();
-  const searchName = name.toLowerCase().trim();
-  const matches = [];
-
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][1] && data[i][1].toLowerCase().includes(searchName)) {
-      matches.push({
-        id: data[i][0].toString(),
-        name: data[i][1],
-        createdDate: data[i][2]
-      });
-    }
-  }
-  return { success: true, data: matches };
-}
-
 function addAttendee(inputData) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME_ATTENDEES);
@@ -189,32 +141,6 @@ function addAttendee(inputData) {
     success: true,
     message: 'Attendee added successfully',
     data: { id, firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), createdDate }
-  };
-}
-
-function addCircleGroup(name) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME_CIRCLE_GROUPS);
-  const data = sheet.getDataRange().getValues();
-
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][1] && data[i][1].toLowerCase() === name.toLowerCase().trim()) {
-      return {
-        success: false,
-        message: 'Circle group already exists',
-        data: { id: data[i][0].toString(), name: data[i][1], createdDate: data[i][2] }
-      };
-    }
-  }
-
-  const id = new Date().getTime().toString();
-  const createdDate = new Date();
-  sheet.appendRow([id, name.trim(), createdDate]);
-
-  return {
-    success: true,
-    message: 'Circle group added successfully',
-    data: { id, name: name.trim(), createdDate }
   };
 }
 

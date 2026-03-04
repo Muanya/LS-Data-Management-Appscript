@@ -47,27 +47,6 @@ function getRouter(e) {
         }
         break;
         
-      // Circle group operations
-      case 'getCircleGroups':
-        result = safeExecute(getCircleGroups);
-        break;
-      case 'searchCircleGroup':
-        const groupValidation = validateRequired(params, ['name']);
-        if (!groupValidation.isValid) {
-          result = createErrorResponse(groupValidation.message);
-        } else {
-          result = safeExecute(searchCircleGroup, params.name);
-        }
-        break;
-      case 'addCircleGroup':
-        const addGroupValidation = validateRequired(params, ['name']);
-        if (!addGroupValidation.isValid) {
-          result = createErrorResponse(addGroupValidation.message);
-        } else {
-          result = safeExecute(addCircleGroup, params.name);
-        }
-        break;
-        
       // Attendance operations
       case 'getAttendance':
         const attendanceValidation = validateRequired(params, ['activity']);
@@ -232,15 +211,6 @@ function postRouter(e) {
         }
         break;
         
-      case 'addCircleGroup':
-        const addGroupValidation = validateRequired(params, ['name']);
-        if (!addGroupValidation.isValid) {
-          result = createErrorResponse(addGroupValidation.message);
-        } else {
-          result = safeExecute(addCircleGroup, params.name);
-        }
-        break;
-        
       case 'recordAttendance':
         const recordValidation = validateRequired(params, ['attendeeData', 'activity', 'date']);
         if (!recordValidation.isValid) {
@@ -274,7 +244,7 @@ function postRouter(e) {
     }
 
     // Clear dashboard cache for data-modifying operations
-    if (result.success && ['addAttendee', 'addCircleGroup', 'recordAttendance', 'removeAttendance'].includes(action)) {
+    if (result.success && ['addAttendee', 'recordAttendance', 'removeAttendance'].includes(action)) {
       clearCache(DASHBOARD_CACHE_KEY);
     }
 

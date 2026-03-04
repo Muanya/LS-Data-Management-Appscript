@@ -112,11 +112,6 @@ Update `.clasp.json` with your script ID:
 - `GET /?action=searchAttendee&name=<name>` - Search attendees
 - `POST /?action=addAttendee` - Add new attendee
 
-### Circle Groups
-- `GET /?action=getCircleGroups` - List all groups
-- `GET /?action=searchCircleGroup&name=<name>` - Search groups
-- `POST /?action=addCircleGroup` - Add new group
-
 ### Attendance
 - `GET /?action=getAttendance&activity=<type>` - Get attendance by activity
 - `GET /?action=getAllAttendance` - Get all attendance records
@@ -318,11 +313,6 @@ ID | Attendee ID | Attendee Name | Activity | Date | Group ID | Group Name | Tim
 ### Attendee Records
 ```
 ID | First Name | Last Name | Email | DOB | Phone | School | Graduated | Created Date
-```
-
-### Circle Groups
-```
-ID | Group Name | Created Date
 ```
 
 ### Activity Groups

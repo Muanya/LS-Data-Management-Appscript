@@ -1,5 +1,4 @@
 const SHEET_NAME_ATTENDEES = 'Attendees';
-const SHEET_NAME_CIRCLE_GROUPS = 'Circle_Groups';
 const SHEET_NAME_ATTENDANCE = 'Attendance'; // Single unified table
 const CONFIG_SHEET_NAME = "Config";
 const DASHBOARD_CACHE_KEY = 'dashboard_data';
