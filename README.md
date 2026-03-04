@@ -163,12 +163,21 @@ Update `.clasp.json` with your script ID:
 | Meditations | Weekly | Simple | numMeditations | No |
 | Recollections | Monthly | Simple | numMonthlyRetreats | No |
 | Retreats | Quarterly | Simple | numLongRetreats | No |
+| Eucharistic Vigils | Monthly | Simple | numEucharisticVigils | No |
+| Spiritual Direction | Weekly | Simple | numSpiritualDirection | No |
+| Visits to the Poor | Monthly | Simple | numVisitsToThePoor | No |
 
 ### Doctrinal Activities
 | Activity | Frequency | Type | Report Key | Group Required | Groups |
 |----------|-----------|-------|------------|---------------|--------|
 | Circles | Weekly | Grouped | numCircles | Yes | Yes |
 | Doctrine | Weekly | Simple | numDoctrineCls | No | No |
+
+### Professional Activities
+| Activity | Frequency | Type | Report Key | Groups |
+|----------|-----------|-------|------------|--------|
+| Professional Get-Togethers | Monthly | Simple | numProfessionalGetTogethers | No |
+| Professional Workshops | Monthly | Simple | numWorkshops | No |
 
 ### Activity Groups
 
@@ -263,7 +272,7 @@ const ACTIVITY_CONFIG = {
     id: 'new-activity',
     name: 'New Activity',
     displayName: 'Display Name for Reports',
-    category: 'Spiritual', // or 'Doctrinal' or add new category
+    category: 'Spiritual', // or 'Doctrinal' or 'Professional' or add new category
     frequency: 'Weekly', // Daily, Weekly, Monthly, Quarterly
     type: 'simple', // 'simple' or 'grouped'
     icon: 'IconName',
@@ -338,6 +347,7 @@ const ACTIVITY_CATEGORIES = {
 **Available Categories**:
 - `Spiritual` - Spiritual activities and practices
 - `Doctrinal` - Doctrinal teaching and instruction
+- `Professional` - Professional development and networking
 
 No other files need to be changed - the system will automatically:
 -- Validate new activity types

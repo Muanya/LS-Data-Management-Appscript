@@ -77,6 +77,11 @@ function generateReport(quarter, year, centre) {
     const recollRows = loadActivity('Recollection');
     const retreatRows = loadActivity('Retreat');
     const doctrineClsRows = loadActivity('Doctrine');
+    const eucharisticVigilRows = loadActivity('EucharisticVigil');
+    const spiritualDirectionRows = loadActivity('SpiritualDirection');
+    const visitsToThePoorRows = loadActivity('VisitToThePoor');
+    const professionalGetTogetherRows = loadActivity('ProfessionalGetTogether');
+    const workshopRows = loadActivity('Workshop');
 
     const cfgSh = ss.getSheetByName(CONFIG_SHEET_NAME);
     const cfg = {};
@@ -94,6 +99,11 @@ function generateReport(quarter, year, centre) {
       const circleMonth = circleRows.filter(filterMonth);
       const recollMonth = recollRows.filter(filterMonth);
       const doctrineClsMonth = doctrineClsRows.filter(filterMonth);
+      const eucharisticVigilMonth = eucharisticVigilRows.filter(filterMonth);
+      const spiritualDirectionMonth = spiritualDirectionRows.filter(filterMonth);
+      const visitsToThePoorMonth = visitsToThePoorRows.filter(filterMonth);
+      const professionalGetTogethersMonth = professionalGetTogetherRows.filter(filterMonth);
+      const workshopsMonth = workshopRows.filter(filterMonth);
 
       const uniq = arr => new Set(arr.map(r => r.attendeeId)).size;
       const uniqueDates = arr => new Set(arr.map(r => r.date)).size;
@@ -116,11 +126,11 @@ function generateReport(quarter, year, centre) {
         month,
         personsInWork: Number(cfg["personsInWork"]) || 0,
         boysInContact: Number(cfg["boysInContact"]) || 0,
-        boysGoingToSD: Number(cfg["boysGoingToSD"]) || 0,
+        boysGoingToSD: uniq(spiritualDirectionMonth), // From Spiritual Direction attendance
         numCircles: uniqueCircles || Number(cfg["numCircles"]) || 0,
-        numProfClasses: Number(cfg["numProfClasses"]) || 0,
-        boysAttendingProfClasses: Number(cfg["boysAttendingProfClasses"]) || 0,
-        boysVisitedPoor: Number(cfg["boysVisitedPoor"]) || 0,
+        numProfClasses: uniqueDates(professionalGetTogethersMonth) + uniqueDates(workshopsMonth), // From Professional activities
+        boysAttendingProfClasses: uniq(professionalGetTogethersMonth) + uniq(workshopsMonth), // From Professional activities
+        boysVisitedPoor: uniq(visitsToThePoorMonth), // From Visits to the Poor attendance
         boysTeachingCatechism: Number(cfg["boysTeachingCatechism"]) || 0,
         catechismBreakdown: catBreakdown(cfg),
         numMeditations: uniqueDates(medMonth),
@@ -132,7 +142,12 @@ function generateReport(quarter, year, centre) {
         boysDoctrineAvg: avgPerWeek(doctrineClsMonth),
         numDoctrineCls: uniqueDates(doctrineClsMonth),
         boysAttendingCircles: uniq(circleMonth),
-        boysAttendedCV: 0,
+        boysAttendedCV: uniq(workshopsMonth), // From Workshop attendance
+        numEucharisticVigils: uniqueDates(eucharisticVigilMonth),
+        numSpiritualDirection: uniqueDates(spiritualDirectionMonth),
+        numVisitsToThePoor: uniqueDates(visitsToThePoorMonth),
+        numProfessionalGetTogethers: uniqueDates(professionalGetTogethersMonth),
+        numWorkshops: uniqueDates(workshopsMonth),
         totalSRBoys: Number(cfg["totalSRBoys"]) || 0,
       };
     });

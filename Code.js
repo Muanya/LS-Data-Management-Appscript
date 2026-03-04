@@ -96,6 +96,91 @@ const ACTIVITY_CONFIG = {
     includeInQuarterReport: true,
     includeInAttendanceTracking: true,
     aggregationMethod: 'count'
+  },
+  EucharisticVigil: {
+    id: 'eucharisticVigils',
+    name: 'Eucharistic Vigils',
+    displayName: 'Eucharistic Vigils',
+    category: 'Spiritual',
+    frequency: 'Monthly',
+    type: 'simple',
+    icon: 'Heart',
+    color: '#8e24aa',
+    dataType: 'number',
+    reportKey: 'numEucharisticVigils',
+    displayOrder: 16,
+    requiresGroup: false,
+    includeInQuarterReport: true,
+    includeInAttendanceTracking: true,
+    aggregationMethod: 'count'
+  },
+  ProfessionalGetTogether: {
+    id: 'professionalGetTogethers',
+    name: 'Professional Get-Togethers',
+    displayName: 'Professional Get-togethers',
+    category: 'Professional',
+    frequency: 'Monthly',
+    type: 'simple',
+    icon: 'Briefcase',
+    color: '#546e7a',
+    dataType: 'number',
+    reportKey: 'numProfessionalGetTogethers',
+    displayOrder: 18,
+    requiresGroup: false,
+    includeInQuarterReport: true,
+    includeInAttendanceTracking: true,
+    aggregationMethod: 'count'
+  },
+  SpiritualDirection: {
+    id: 'spiritualDirection',
+    name: 'Spiritual Direction',
+    displayName: 'Spiritual Direction',
+    category: 'Spiritual',
+    frequency: 'Weekly',
+    type: 'simple',
+    icon: 'Cross',
+    color: '#2e7d32',
+    dataType: 'number',
+    reportKey: 'numSpiritualDirection',
+    displayOrder: 20,
+    requiresGroup: false,
+    includeInQuarterReport: true,
+    includeInAttendanceTracking: true,
+    aggregationMethod: 'count'
+  },
+  VisitToThePoor: {
+    id: 'visitsToThePoor',
+    name: 'Visits to the Poor',
+    displayName: 'Visits to the Poor',
+    category: 'Spiritual',
+    frequency: 'Monthly',
+    type: 'simple',
+    icon: 'Heart',
+    color: '#d32f2f',
+    dataType: 'number',
+    reportKey: 'numVisitsToThePoor',
+    displayOrder: 24,
+    requiresGroup: false,
+    includeInQuarterReport: true,
+    includeInAttendanceTracking: true,
+    aggregationMethod: 'count'
+  },
+  Workshop: {
+    id: 'workshops',
+    name: 'Workshops',
+    displayName: 'Professional Workshops',
+    category: 'Professional',
+    frequency: 'Monthly',
+    type: 'simple',
+    icon: 'Tool',
+    color: '#0277bd',
+    dataType: 'number',
+    reportKey: 'numWorkshops',
+    displayOrder: 22,
+    requiresGroup: false,
+    includeInQuarterReport: true,
+    includeInAttendanceTracking: true,
+    aggregationMethod: 'count'
   }
 };
 
@@ -110,6 +195,11 @@ const ACTIVITY_CATEGORIES = {
     id: 'doctrinal',
     name: 'Doctrinal Activities',
     displayOrder: 2
+  },
+  Professional: {
+    id: 'professional',
+    name: 'Professional Activities',
+    displayOrder: 3
   }
 };
 
