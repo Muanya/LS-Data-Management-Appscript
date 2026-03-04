@@ -218,15 +218,9 @@ function getSessionTrends() {
 }
 
 function getActivityColor(activity) {
-  const colors = {
-    'Circle': '#3B82F6',
-    'Workshop': '#10B981', 
-    'Mentorship': '#F59E0B',
-    'Event': '#EF4444',
-    'Study Group': '#8B5CF6',
-    'Service': '#EC4899'
-  };
-  return colors[activity] || '#6B7280';
+  // activity is the key from ACTIVITY_CONFIG (e.g., 'Circle', 'Workshop')
+  const activityConfig = ACTIVITY_CONFIG[activity];
+  return activityConfig ? activityConfig.color : '#6B7280';
 }
 
 function calculateSessionGrowth(sessions) {
