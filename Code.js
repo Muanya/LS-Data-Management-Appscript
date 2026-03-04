@@ -36,9 +36,6 @@ function initializeSheets() {
     if (QUARTER_REPORT_FIELDS.length > 0) {
       quarterReportConfigSheet.getRange(2, 1, QUARTER_REPORT_FIELDS.length, QUARTER_REPORT_FIELDS[0].length).setValues(QUARTER_REPORT_FIELDS);
     }
-
-    quarterReportConfigSheet.autoResizeColumns();
-    quarterReportConfigSheet.setFrozenRows(1);
   }
 }
 
