@@ -29,14 +29,14 @@ function initializeSheets() {
   let quarterReportConfigSheet = ss.getSheetByName(SHEET_NAME_QUARTER_REPORT_CONFIG);
   if (!quarterReportConfigSheet) {
     quarterReportConfigSheet = ss.insertSheet(SHEET_NAME_QUARTER_REPORT_CONFIG);
-    quarterReportConfigSheet.appendRow(['Key', 'Label', 'Data Type', 'Is Visible By Default', 'Category', 'Display Order', 'Description']);
-    quarterReportConfigSheet.getRange('A1:G1').setFontWeight('bold').setBackground('#ff9800').setFontColor('#ffffff');
-    
-    
+    quarterReportConfigSheet.appendRow(['Key', 'Label', 'Data Type', 'Is Visible By Default', 'Display Order', 'Description']);
+    quarterReportConfigSheet.getRange('A1:F1').setFontWeight('bold').setBackground('#ff9800').setFontColor('#ffffff');
+
+
     if (QUARTER_REPORT_FIELDS.length > 0) {
       quarterReportConfigSheet.getRange(2, 1, QUARTER_REPORT_FIELDS.length, QUARTER_REPORT_FIELDS[0].length).setValues(QUARTER_REPORT_FIELDS);
     }
-    
+
     quarterReportConfigSheet.autoResizeColumns();
     quarterReportConfigSheet.setFrozenRows(1);
   }
