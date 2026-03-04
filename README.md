@@ -181,7 +181,7 @@ All activities now support groups with a unified structure:
 
 **Standard Group Sheet Columns**:
 ```
-ID | Group Name | Created Date | Capacity | Is Active | Level | Day | Location | Instructor | Updated Date
+ID | Group Name | Created Date | Capacity | Is Active | Level | Day | Location | Instructor | Second Instructor
 ```
 
 **Activity Sheet Mappings**:
@@ -211,10 +211,10 @@ ID | Group Name | Created Date | Capacity | Is Active | Level | Day | Location |
           "level": "standard",
           "day": "varies",
           "location": "",
-          "instructor": ""
+          "instructor": "",
+          "secondInstructor": ""
         },
-        "createdAt": "2026-01-15T10:00:00Z",
-        "updatedAt": "2026-03-01T14:30:00Z"
+        "createdAt": "2026-01-15T10:00:00Z"
       }
     ],
     "activityId": "activity-id",
@@ -327,7 +327,7 @@ ID | Group Name | Created Date
 
 ### Activity Groups
 ```
-ID | Group Name | Created Date | Capacity | Is Active | Level | Day | Location | Instructor | Updated Date
+ID | Group Name | Created Date | Capacity | Is Active | Level | Day | Location | Instructor | Second Instructor
 ```
 
 ### Activity Groups API Response
@@ -348,10 +348,10 @@ ID | Group Name | Created Date | Capacity | Is Active | Level | Day | Location |
           "level": "standard",
           "day": "varies",
           "location": "",
-          "instructor": ""
+          "instructor": "",
+          "secondInstructor": ""
         },
-        "createdAt": "2026-01-15T10:00:00Z",
-        "updatedAt": "2026-03-01T14:30:00Z"
+        "createdAt": "2026-01-15T10:00:00Z"
       }
     ],
     "activityId": "activity-id",

@@ -98,12 +98,10 @@ const ACTIVITY_CONFIG = {
     dataType: 'number',
     reportKey: 'numDoctrineCls',
     displayOrder: 14,
-    requiresGroup: true,
-    groupType: 'doctrine',
-    allowMultipleGroups: true,
+    requiresGroup: false,
     includeInQuarterReport: true,
     includeInAttendanceTracking: true,
-    aggregationMethod: 'sum'
+    aggregationMethod: 'count'
   }
 };
 
@@ -142,7 +140,7 @@ function initializeSheets() {
     let groupSheet = ss.getSheetByName(sheetName);
     if (!groupSheet) {
       groupSheet = ss.insertSheet(sheetName);
-      groupSheet.appendRow(['ID', 'Group Name', 'Created Date', 'Capacity', 'Is Active', 'Level', 'Day', 'Location', 'Instructor', 'Updated Date']);
+      groupSheet.appendRow(['ID', 'Group Name', 'Created Date', 'Capacity', 'Is Active', 'Level', 'Day', 'Location', 'Instructor', 'Second Instructor']);
       groupSheet.getRange('A1:J1').setFontWeight('bold').setBackground('#9c27b0').setFontColor('#ffffff');
     }
   });

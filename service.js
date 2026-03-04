@@ -76,10 +76,11 @@ function getActivityGroupsUnified(activityKey, activityId) {
         level: data[i][5] || 'standard',
         day: data[i][6] || 'varies',
         location: data[i][7] || '',
-        instructor: data[i][8] || ''
+        instructor: data[i][8] || '',
+        secondInstructor: data[i][9] || ''
       },
-      createdAt: createdDate.toISOString(),
-      updatedAt: data[i][9] ? new Date(data[i][9]).toISOString() : createdDate.toISOString()
+      createdAt: createdDate.toISOString()
+      // Removed updatedAt field
     });
   }
   
