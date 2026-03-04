@@ -1,3 +1,6 @@
+
+let attendeeNameCache = null;
+
 function getSpreadsheet() {
   return SpreadsheetApp.getActiveSpreadsheet();
 }
@@ -86,7 +89,7 @@ function getActivityStats(activity) {
     totalAttendees:   rows.length,
     attendanceRate:   `${attendanceRate}%`,
     peakTime:        peakDate,
-    topAttendee:      getAttendeeName(topAttendeeId) || 'N/A',
+    topAttendee:      getAttendeeName(topAttendeeId.toString()) || 'N/A',
     dailyAverage:     Math.round(rows.length / daysInPeriod),
     uniqueAttendees:  uniqueAttendees.size
   };
@@ -260,7 +263,7 @@ function getCrossActivityData() {
     .filter(([_, acts]) => acts.size > 1)
     .map(([attendeeId, acts]) => ({
       attendeeId,
-      attendeeName:  getAttendeeName(attendeeId),
+      attendeeName:  getAttendeeName(attendeeId.toString()),
       activities:    Array.from(acts),
       activityCount: acts.size
     }))
@@ -304,20 +307,22 @@ function calculateActivityOverlap(activityA, activityB, attendeesMap) {
 }
 
 function getAttendeeName(attendeeId) {
-  // Cache attendee names to avoid repeated sheet reads
-  if (!this.attendeeNameCache) {
-    this.attendeeNameCache = new Map();
+  if (!attendeeNameCache) {
+    attendeeNameCache = new Map();
     const sheet = getSheetSafe(SHEET_NAME_ATTENDEES);
     if (sheet) {
       const data = sheet.getDataRange().getValues();
       data.slice(1).forEach(row => {
         if (row[0]) {
-          this.attendeeNameCache.set(row[0].toString(), `${row[1] || ''} ${row[2] || ''}`.trim());
+          const firstName = row[1] || '';
+          const lastName = row[2] || '';
+          const fullName = `${firstName} ${lastName}`.trim();
+          attendeeNameCache.set(row[0].toString(), fullName);
         }
       });
     }
   }
-  return this.attendeeNameCache.get(attendeeId) || null;
+  return attendeeNameCache.get(attendeeId.toString()) || null;
 }
 
 function getMostPopularActivity() {
