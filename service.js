@@ -16,6 +16,76 @@ function getActivities() {
   };
 }
 
+function getActivityGroups(activityId) {
+  // Validate activityId exists in our configuration
+  const activityConfig = Object.values(ACTIVITY_CONFIG).find(activity => activity.id === activityId);
+  if (!activityConfig) {
+    return { success: false, message: 'Invalid activity ID' };
+  }
+  
+  // Get activity key from config (e.g., 'circles' -> 'Circle')
+  const activityKey = Object.keys(ACTIVITY_CONFIG).find(key => ACTIVITY_CONFIG[key].id === activityId);
+  
+  // Use unified group loading for all activities
+  const groups = getActivityGroupsUnified(activityKey, activityId);
+  const activeGroups = groups.filter(group => group.isActive);
+  
+  return {
+    success: true,
+    data: {
+      groups: groups,
+      activityId: activityId,
+      totalCount: groups.length,
+      activeCount: activeGroups.length
+    }
+  };
+}
+
+function getActivityGroupsUnified(activityKey, activityId) {
+  const sheetName = ACTIVITY_GROUP_SHEETS[activityKey];
+  if (!sheetName) {
+    // Activity doesn't support groups
+    return [];
+  }
+  
+  const sheet = getSheetSafe(sheetName);
+  if (!sheet) {
+    // Sheet doesn't exist yet, return empty array
+    return [];
+  }
+  
+  const data = sheet.getDataRange().getValues();
+  const groups = [];
+  
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue; // Skip empty rows
+    
+    const createdDate = data[i][2] ? new Date(data[i][2]) : new Date();
+    const groupName = data[i][1] || '';
+    
+    groups.push({
+      id: data[i][0].toString(),
+      name: groupName,
+      activityId: activityId,
+      activityType: activityKey.toLowerCase(),
+      description: `${activityKey} group: ${groupName || 'Unnamed'}`,
+      capacity: data[i][3] ? Number(data[i][3]) : 20, // Capacity from column 4
+      isActive: data[i][4] !== undefined ? Boolean(data[i][4]) : true, // Active status from column 5
+      metadata: {
+        // Additional metadata from columns 6+
+        level: data[i][5] || 'standard',
+        day: data[i][6] || 'varies',
+        location: data[i][7] || '',
+        instructor: data[i][8] || ''
+      },
+      createdAt: createdDate.toISOString(),
+      updatedAt: data[i][9] ? new Date(data[i][9]).toISOString() : createdDate.toISOString()
+    });
+  }
+  
+  return groups;
+}
+
 function getAttendees() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAME_ATTENDEES);

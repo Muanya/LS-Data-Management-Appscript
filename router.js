@@ -17,6 +17,15 @@ function getRouter(e) {
         result = safeExecute(getActivities);
         break;
         
+      case 'getActivityGroups':
+        const activityGroupsValidation = validateRequired(params, ['activityId']);
+        if (!activityGroupsValidation.isValid) {
+          result = createErrorResponse(activityGroupsValidation.message);
+        } else {
+          result = safeExecute(getActivityGroups, params.activityId);
+        }
+        break;
+        
       // Attendee operations
       case 'getAttendees':
         result = safeExecute(getAttendees);

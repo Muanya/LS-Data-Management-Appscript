@@ -4,6 +4,11 @@ const SHEET_NAME_ATTENDANCE = 'Attendance'; // Single unified table
 const CONFIG_SHEET_NAME = "Config";
 const DASHBOARD_CACHE_KEY = 'dashboard_data';
 
+// Activity group sheet mappings
+const ACTIVITY_GROUP_SHEETS = {
+  Circle: 'Circle_Groups',
+};
+
 // Add new activities here ONLY — no other files need to change
 const ACTIVITY_CONFIG = {
   Med: {
@@ -93,10 +98,12 @@ const ACTIVITY_CONFIG = {
     dataType: 'number',
     reportKey: 'numDoctrineCls',
     displayOrder: 14,
-    requiresGroup: false,
+    requiresGroup: true,
+    groupType: 'doctrine',
+    allowMultipleGroups: true,
     includeInQuarterReport: true,
     includeInAttendanceTracking: true,
-    aggregationMethod: 'count'
+    aggregationMethod: 'sum'
   }
 };
 
@@ -130,12 +137,15 @@ function initializeSheets() {
     attendeesSheet.getRange('A1:I1').setFontWeight('bold').setBackground('#4285f4').setFontColor('#ffffff');
   }
 
-  let circleGroupsSheet = ss.getSheetByName(SHEET_NAME_CIRCLE_GROUPS);
-  if (!circleGroupsSheet) {
-    circleGroupsSheet = ss.insertSheet(SHEET_NAME_CIRCLE_GROUPS);
-    circleGroupsSheet.appendRow(['ID', 'Group Name', 'Created Date']);
-    circleGroupsSheet.getRange('A1:C1').setFontWeight('bold').setBackground('#9c27b0').setFontColor('#ffffff');
-  }
+  // Initialize activity group sheets
+  Object.values(ACTIVITY_GROUP_SHEETS).forEach(sheetName => {
+    let groupSheet = ss.getSheetByName(sheetName);
+    if (!groupSheet) {
+      groupSheet = ss.insertSheet(sheetName);
+      groupSheet.appendRow(['ID', 'Group Name', 'Created Date', 'Capacity', 'Is Active', 'Level', 'Day', 'Location', 'Instructor', 'Updated Date']);
+      groupSheet.getRange('A1:J1').setFontWeight('bold').setBackground('#9c27b0').setFontColor('#ffffff');
+    }
+  });
 
   let attendanceSheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
   if (!attendanceSheet) {

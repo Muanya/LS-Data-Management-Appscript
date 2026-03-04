@@ -105,6 +105,7 @@ Update `.clasp.json` with your script ID:
 
 ### Activities
 - `GET /?action=getActivities` - List all activities with comprehensive metadata and categories
+- `GET /?action=getActivityGroups&activityId=<activityId>` - Get groups for a specific activity
 
 ### Attendees
 - `GET /?action=getAttendees` - List all attendees
@@ -161,17 +162,90 @@ Update `.clasp.json` with your script ID:
 ## 🎯 Activities Supported
 
 ### Spiritual Activities
-| Activity | Frequency | Type | Report Key |
-|----------|-----------|-------|------------|
-| Meditations | Weekly | Simple | numMeditations |
-| Recollections | Monthly | Simple | numMonthlyRetreats |
-| Retreats | Quarterly | Simple | numLongRetreats |
+| Activity | Frequency | Type | Report Key | Groups |
+|----------|-----------|-------|------------|--------|
+| Meditations | Weekly | Simple | numMeditations | No |
+| Recollections | Monthly | Simple | numMonthlyRetreats | No |
+| Retreats | Quarterly | Simple | numLongRetreats | No |
 
 ### Educational Activities
-| Activity | Frequency | Type | Report Key | Group Required |
-|----------|-----------|-------|------------|---------------|
-| Circles | Weekly | Grouped | numCircles | Yes |
-| Doctrine | Weekly | Simple | numDoctrineCls | No |
+| Activity | Frequency | Type | Report Key | Group Required | Groups |
+|----------|-----------|-------|------------|---------------|--------|
+| Circles | Weekly | Grouped | numCircles | Yes | Yes |
+| Doctrine | Weekly | Simple | numDoctrineCls | No | No |
+
+### Activity Groups
+
+#### Unified Group Structure
+All activities now support groups with a unified structure:
+
+**Standard Group Sheet Columns**:
+```
+ID | Group Name | Created Date | Capacity | Is Active | Level | Day | Location | Instructor | Updated Date
+```
+
+**Activity Sheet Mappings**:
+- **Circles**: `Circle_Groups` sheet
+- **Meditations**: `Meditation_Groups` sheet
+- **Recollections**: `Recollection_Groups` sheet
+- **Retreats**: `Retreat_Groups` sheet
+- **Doctrine**: `Doctrine_Groups` sheet
+
+**API Endpoint**: `GET /?action=getActivityGroups&activityId=<activityId>`
+
+**Response Structure**:
+```json
+{
+  "success": true,
+  "data": {
+    "groups": [
+      {
+        "id": "group-id",
+        "name": "Group Name",
+        "activityId": "activity-id",
+        "activityType": "activity-type",
+        "description": "Activity group: Group Name",
+        "capacity": 20,
+        "isActive": true,
+        "metadata": {
+          "level": "standard",
+          "day": "varies",
+          "location": "",
+          "instructor": ""
+        },
+        "createdAt": "2026-01-15T10:00:00Z",
+        "updatedAt": "2026-03-01T14:30:00Z"
+      }
+    ],
+    "activityId": "activity-id",
+    "totalCount": 1,
+    "activeCount": 1
+  }
+}
+```
+
+#### Adding Group Support for New Activities
+
+To add group support for other activities:
+
+1. **Update Activity Configuration**:
+```javascript
+NewActivity: {
+  // ... other properties
+  requiresGroup: true,
+  groupType: 'new-activity-type'
+}
+```
+
+2. **Add Sheet Mapping** in `Code.js`:
+```javascript
+const ACTIVITY_GROUP_SHEETS = {
+  // ... existing mappings
+  NewActivity: 'NewActivity_Groups'
+};
+```
+
+3. **Done!** The unified `getActivityGroupsUnified()` function will automatically handle the new activity.
 
 ### Activity Metadata
 Each activity includes comprehensive metadata:
@@ -249,6 +323,42 @@ ID | First Name | Last Name | Email | DOB | Phone | School | Graduated | Created
 ### Circle Groups
 ```
 ID | Group Name | Created Date
+```
+
+### Activity Groups
+```
+ID | Group Name | Created Date | Capacity | Is Active | Level | Day | Location | Instructor | Updated Date
+```
+
+### Activity Groups API Response
+```json
+{
+  "success": true,
+  "data": {
+    "groups": [
+      {
+        "id": "group-id",
+        "name": "Group Name",
+        "activityId": "activity-id",
+        "activityType": "activity-type",
+        "description": "Activity group: Group Name",
+        "capacity": 20,
+        "isActive": true,
+        "metadata": {
+          "level": "standard",
+          "day": "varies",
+          "location": "",
+          "instructor": ""
+        },
+        "createdAt": "2026-01-15T10:00:00Z",
+        "updatedAt": "2026-03-01T14:30:00Z"
+      }
+    ],
+    "activityId": "activity-id",
+    "totalCount": 1,
+    "activeCount": 1
+  }
+}
 ```
 
 ## 🔍 Monitoring & Logging
