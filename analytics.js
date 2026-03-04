@@ -25,13 +25,13 @@ function getDashboardData() {
 
   const dashboardData = {
     summary:       getSummaryStats(),
-    activities:    [...VALID_ACTIVITIES].map(activity => {
-      const config = Object.values(ACTIVITY_CONFIG).find(cfg => cfg.id === activity);
+    activities:    Object.keys(ACTIVITY_CONFIG).map(activityKey => {
+      const config = ACTIVITY_CONFIG[activityKey];
       return {
-        id: activity,
-        name: config?.name || activity,
-        color: config?.color || '#666666',
-        stats: getActivityStats(activity)
+        id: config.id,
+        name: config.name,
+        color: config.color,
+        stats: getActivityStats(config.id)
       };
     }),
     trends:        getWeeklyTrends(),
