@@ -25,7 +25,15 @@ function getDashboardData() {
 
   const dashboardData = {
     summary:       getSummaryStats(),
-    activities:    [...VALID_ACTIVITIES].map(activity => ({ activity, stats: getActivityStats(activity) })),
+    activities:    [...VALID_ACTIVITIES].map(activity => {
+      const config = Object.values(ACTIVITY_CONFIG).find(cfg => cfg.id === activity);
+      return {
+        id: activity,
+        name: config?.name || activity,
+        color: config?.color || '#666666',
+        stats: getActivityStats(activity)
+      };
+    }),
     trends:        getWeeklyTrends(),
     crossActivity: getCrossActivityData(),
     lastUpdated:   new Date().toISOString()
