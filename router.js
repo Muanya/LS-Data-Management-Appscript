@@ -66,32 +66,6 @@ function getRouter(e) {
           result = safeExecute(getAllAttendance, params.startDate, params.endDate);
         }
         break;
-      case 'recordAttendance':
-        const recordValidation = validateRequired(params, ['attendeeData', 'activity', 'date']);
-        if (!recordValidation.isValid) {
-          result = createErrorResponse(recordValidation.message);
-        } else {
-          const activityValidation = validateActivity(params.activity);
-          if (!activityValidation.isValid) {
-            result = createErrorResponse(activityValidation.message);
-          } else {
-            result = safeExecute(recordBulkAttendance, params);
-          }
-        }
-        break;
-      case 'removeAttendance':
-        const removeValidation = validateRequired(params, ['attendeeId', 'activity', 'date']);
-        if (!removeValidation.isValid) {
-          result = createErrorResponse(removeValidation.message);
-        } else {
-          const activityValidation = validateActivity(params.activity);
-          if (!activityValidation.isValid) {
-            result = createErrorResponse(activityValidation.message);
-          } else {
-            result = safeExecute(removeAttendance, params.attendeeId, params.activity, params.date, params.groupId);
-          }
-        }
-        break;
 
       // Analytics operations
       case 'getActivitySummary':

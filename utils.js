@@ -44,12 +44,18 @@ function validateRequired(params, requiredFields) {
 }
 
 function validateActivity(activity) {
-  if (!activity || !VALID_ACTIVITIES.has(activity)) {
+  if (!activity) {
+    return { isValid: false, message: 'Activity is required' };
+  }
+
+  const activityEntry = Object.values(ACTIVITY_CONFIG).find(a => a.id === activity);
+  if (!activityEntry) {
     return {
       isValid: false,
-      message: `Invalid activity. Must be one of: ${Array.from(VALID_ACTIVITIES).join(', ')}`
+      message: `Invalid activity. Must be one of: ${Object.values(ACTIVITY_CONFIG).map(a => a.id).join(', ')}`
     };
   }
+
   return { isValid: true };
 }
 

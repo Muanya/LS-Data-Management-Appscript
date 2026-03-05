@@ -249,45 +249,34 @@ function addAttendee(inputData) {
 // ── ATTENDANCE: single-table versions ────────────────────────────────────────
 
 function recordBulkAttendance(params) {
-  const attendees = JSON.parse(params.attendeeData || '[]');
-  const activity = params.activity;
-  const date = params.date;
-  const groupId = params.groupId || '';
-  const groupName = params.groupName || '';
-
-  if (!attendees.length || !activity || !date) {
-    return { success: false, message: 'Missing required parameters' };
-  }
-  if (!VALID_ACTIVITIES.has(activity)) {
-    return { success: false, message: 'Invalid activity' };
-  }
-  if (activity === 'Circle' && (!groupId || !groupName)) {
-    return { success: false, message: 'Circle activity requires group information' };
+  let attendees;
+  try {
+    attendees = JSON.parse(params.attendeeData || '[]');
+  } catch (e) {
+    return { success: false, message: 'Invalid attendee data format' };
   }
 
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME_ATTENDANCE);
+  const { activity, date } = params;
+  const groupId = params.groupId || null;
+  const groupName = params.groupName || null;
+  const activityEntry = Object.values(ACTIVITY_CONFIG).find(a => a.id === activity);
+
+  if (activityEntry.requiresGroup && (!groupId || !groupName)) {
+    return { success: false, message: `${activityEntry.name} activity requires group information` };
+  }
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME_ATTENDANCE);
   const timestamp = new Date();
+  const baseId = timestamp.getTime();
 
   const results = { success: true, total: attendees.length, successful: 0, failed: 0, errors: [], records: [] };
   const dataToInsert = [];
 
   attendees.forEach((attendee, index) => {
     try {
-      const id = new Date().getTime().toString() + index;
-      // Row: ID | Attendee ID | Attendee Name | Activity | Date | Group ID | Group Name | Timestamp
+      const id = baseId.toString() + index;
       dataToInsert.push([id, attendee.id, attendee.name, activity, date, groupId, groupName, timestamp]);
-
-      results.records.push({
-        id,
-        attendeeId: attendee.id,
-        attendeeName: attendee.name,
-        activity,
-        groupId: groupId || null,
-        groupName: groupName || null,
-        date,
-        timestamp
-      });
+      results.records.push({ id, attendeeId: attendee.id, attendeeName: attendee.name, activity, groupId, groupName, date, timestamp });
       results.successful++;
     } catch (error) {
       results.failed++;
@@ -296,9 +285,12 @@ function recordBulkAttendance(params) {
   });
 
   if (dataToInsert.length > 0) {
-    const lastRow = sheet.getLastRow();
-    const targetRange = sheet.getRange(lastRow + 1, 1, dataToInsert.length, dataToInsert[0].length);
-    targetRange.setValues(dataToInsert);
+    try {
+      const lastRow = sheet.getLastRow();
+      sheet.getRange(lastRow + 1, 1, dataToInsert.length, dataToInsert[0].length).setValues(dataToInsert);
+    } catch (error) {
+      return { success: false, message: 'Failed to write to sheet', error: error.toString() };
+    }
   }
 
   return results;
