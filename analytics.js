@@ -34,7 +34,7 @@ function getDashboardData() {
         id: config.id,
         name: config.name,
         color: config.color,
-        stats: getActivityStats(activityKey)
+        stats: getActivityStats(config.id)
       };
     }),
     trends: getSessionTrends(),

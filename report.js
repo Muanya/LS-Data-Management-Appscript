@@ -21,7 +21,7 @@ function inMonth(dateStr, month, yr) {
 }
 
 // Load all attendance rows from the single table, filtered by activity
-function loadActivity(activity) {
+function loadActivity(activityId) {
   const sheet = getSpreadsheet().getSheetByName(SHEET_NAME_ATTENDANCE);
   if (!sheet) {
     console.error(`Sheet '${SHEET_NAME_ATTENDANCE}' not found`);
@@ -30,7 +30,7 @@ function loadActivity(activity) {
 
   const tz = Session.getScriptTimeZone();
   return sheet.getDataRange().getValues().slice(1)
-    .filter(r => r[COL.ACTIVITY] === activity)
+    .filter(r => r[COL.ACTIVITY] === activityId)
     .map(r => {
       const d = parseDate(r[COL.DATE]);
       const dateStr = Utilities.formatDate(d, tz, "yyyy-MM-dd");
@@ -72,16 +72,16 @@ function generateReport(quarter, year, centre) {
     }
 
     // Single-table reads per activity (replaces loadSheet with per-sheet logic)
-    const medRows = loadActivity('Med');
-    const circleRows = loadActivity('Circle');
-    const recollRows = loadActivity('Recollection');
-    const retreatRows = loadActivity('Retreat');
-    const doctrineClsRows = loadActivity('Doctrine');
-    const eucharisticVigilRows = loadActivity('EucharisticVigil');
-    const spiritualDirectionRows = loadActivity('SpiritualDirection');
-    const visitsToThePoorRows = loadActivity('VisitToThePoor');
-    const professionalGetTogetherRows = loadActivity('ProfessionalGetTogether');
-    const workshopRows = loadActivity('Workshop');
+    const medRows = loadActivity('meditations');
+    const circleRows = loadActivity('circles');
+    const recollRows = loadActivity('recollections');
+    const retreatRows = loadActivity('retreats');
+    const doctrineClsRows = loadActivity('doctrineClasses');
+    const eucharisticVigilRows = loadActivity('eucharisticVigils');
+    const spiritualDirectionRows = loadActivity('spiritualDirection');
+    const visitsToThePoorRows = loadActivity('visitsToThePoor');
+    const professionalGetTogetherRows = loadActivity('professionalGetTogethers');
+    const workshopRows = loadActivity('workshops');
 
     const cfgSh = ss.getSheetByName(CONFIG_SHEET_NAME);
     const cfg = {};
