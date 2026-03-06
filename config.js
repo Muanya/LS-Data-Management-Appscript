@@ -20,7 +20,7 @@ const ACTIVITY_CONFIG = {
   Med: {
     id: 'meditations',
     name: 'Meditations',
-    displayName: 'Number of meditations held',
+    displayName: 'Weekly Meditations',
     category: 'Spiritual',
     frequency: 'Weekly',
     type: 'simple',
@@ -37,7 +37,7 @@ const ACTIVITY_CONFIG = {
   Circle: {
     id: 'circles',
     name: 'Circles',
-    displayName: 'Number of circles (prep classes)',
+    displayName: 'Circles',
     category: 'Doctrinal',
     frequency: 'Weekly',
     type: 'grouped',
@@ -56,7 +56,7 @@ const ACTIVITY_CONFIG = {
   Recollection: {
     id: 'recollections',
     name: 'Recollections',
-    displayName: 'Monthly recollections',
+    displayName: 'Monthly Recollections',
     category: 'Spiritual',
     frequency: 'Monthly',
     type: 'simple',
@@ -210,7 +210,7 @@ const ACTIVITY_CATEGORIES = {
   }
 };
 
-const VALID_ACTIVITIES = new Set(Object.keys(ACTIVITY_CONFIG));
+const VALID_ACTIVITIES = new Set(Object.values(ACTIVITY_CONFIG).map(a => a.id));
 
 // Quarter report configuration data
 const QUARTER_REPORT_FIELDS = [

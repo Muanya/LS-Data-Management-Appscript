@@ -22,13 +22,13 @@ function getSheetSafe(sheetName) {
 }
 
 function getDashboardData() {
-  const cache  = CacheService.getScriptCache();
+  const cache = CacheService.getScriptCache();
   const cached = cache.get(DASHBOARD_CACHE_KEY);
   if (cached) return { success: true, data: JSON.parse(cached) };
 
   const dashboardData = {
-    summary:       getSummaryStats(),
-    activities:    Object.keys(ACTIVITY_CONFIG).map(activityKey => {
+    summary: getSummaryStats(),
+    activities: Object.keys(ACTIVITY_CONFIG).map(activityKey => {
       const config = ACTIVITY_CONFIG[activityKey];
       return {
         id: config.id,
@@ -39,7 +39,7 @@ function getDashboardData() {
     }),
     trends: getSessionTrends(),
     crossActivity: getCrossActivityData(),
-    lastUpdated:   new Date().toISOString()
+    lastUpdated: new Date().toISOString()
   };
 
   cache.put(DASHBOARD_CACHE_KEY, JSON.stringify(dashboardData), 300);
@@ -82,16 +82,16 @@ function getActivityStats(activity) {
 
   // Calculate attendance rate based on unique attendees per session
   const avgAttendancePerSession = daysInPeriod > 0 ? rows.length / daysInPeriod : 0;
-  const attendanceRate = uniqueAttendees.size > 0 ? 
+  const attendanceRate = uniqueAttendees.size > 0 ?
     Math.round((avgAttendancePerSession / uniqueAttendees.size) * 100) : 0;
 
   return {
-    totalAttendees:   rows.length,
-    attendanceRate:   `${attendanceRate}%`,
-    peakTime:        peakDate,
-    topAttendee:      getAttendeeName(topAttendeeId.toString()) || 'N/A',
-    dailyAverage:     Math.round(rows.length / daysInPeriod),
-    uniqueAttendees:  uniqueAttendees.size
+    totalAttendees: rows.length,
+    attendanceRate: `${attendanceRate}%`,
+    peakTime: peakDate,
+    topAttendee: getAttendeeName(topAttendeeId.toString()) || 'N/A',
+    dailyAverage: Math.round(rows.length / daysInPeriod),
+    uniqueAttendees: uniqueAttendees.size
   };
 }
 
@@ -101,9 +101,9 @@ function getSummaryStats() {
     return { totalParticipants: 0, totalRecords: 0, avgAttendanceRate: '0%', mostPopularActivity: 'N/A', peakHours: 'N/A', crossActivityRate: '0%' };
   }
 
-  const data             = sheet.getDataRange().getValues().slice(1);
-  const uniqueAttendees  = new Set(data.map(row => row[COL.ATTENDEE_ID]));
-  
+  const data = sheet.getDataRange().getValues().slice(1);
+  const uniqueAttendees = new Set(data.map(row => row[COL.ATTENDEE_ID]));
+
   // Calculate actual average attendance rate across all activities
   let totalAttendanceRate = 0;
   let activityCount = 0;
@@ -118,12 +118,12 @@ function getSummaryStats() {
   const avgRate = activityCount > 0 ? Math.round(totalAttendanceRate / activityCount) : 0;
 
   return {
-    totalParticipants:  uniqueAttendees.size,
-    totalRecords:       data.length,
-    avgAttendanceRate:  `${avgRate}%`,
+    totalParticipants: uniqueAttendees.size,
+    totalRecords: data.length,
+    avgAttendanceRate: `${avgRate}%`,
     mostPopularActivity: getMostPopularActivity(),
-    peakHours:          getPeakHours(),
-    crossActivityRate:  getCrossActivityRate()
+    peakHours: getPeakHours(),
+    crossActivityRate: getCrossActivityRate()
   };
 }
 
@@ -133,12 +133,12 @@ function getSessionTrends() {
 
   if (sheet && sheet.getLastRow() > 1) {
     const data = sheet.getDataRange().getValues().slice(1);
-    
+
     data.forEach(row => {
       const activity = row[COL.ACTIVITY];
       const date = formatDateForOutput(row[COL.DATE]);
       const sessionKey = `${activity}_${date}`;
-      
+
       if (!sessionData.has(sessionKey)) {
         sessionData.set(sessionKey, {
           activity,
@@ -147,7 +147,7 @@ function getSessionTrends() {
           timestamp: row[COL.TIMESTAMP]
         });
       }
-      
+
       sessionData.get(sessionKey).attendees.add(row[COL.ATTENDEE_ID]);
     });
   }
@@ -159,7 +159,7 @@ function getSessionTrends() {
   // Group sessions by activity for trend analysis
   const trends = { labels: [], datasets: [] };
   const activitySessions = {};
-  
+
   // Organize sessions by activity
   sessions.forEach(session => {
     if (!activitySessions[session.activity]) {
@@ -184,7 +184,7 @@ function getSessionTrends() {
       backgroundColor: getActivityColor(activity) + '20',
       sessions: activitySessionList.length,
       totalAttendance: attendanceData.reduce((sum, count) => sum + count, 0),
-      averageAttendance: attendanceData.length > 0 ? 
+      averageAttendance: attendanceData.length > 0 ?
         Math.round(attendanceData.reduce((sum, count) => sum + count, 0) / attendanceData.length) : 0
     });
   }
@@ -200,7 +200,7 @@ function getSessionTrends() {
     const dateB = new Date(2024, bMonth - 1, bDay);
     return dateA - dateB;
   });
-  
+
   trends.labels = allSessionDates.slice(-20); // Show last 20 sessions
 
   // Calculate overall statistics
@@ -221,24 +221,23 @@ function getSessionTrends() {
 }
 
 function getActivityColor(activity) {
-  // activity is the key from ACTIVITY_CONFIG (e.g., 'Circle', 'Workshop')
-  const activityConfig = ACTIVITY_CONFIG[activity];
+  const activityConfig = Object.values(ACTIVITY_CONFIG).find(a => a.id === activity);
   return activityConfig ? activityConfig.color : '#6B7280';
 }
 
 function calculateSessionGrowth(sessions) {
   if (sessions.length < 2) return 'Insufficient data';
-  
+
   const recentSessions = sessions.slice(-5); // Last 5 sessions
   const previousSessions = sessions.slice(-10, -5); // Previous 5 sessions
-  
+
   if (previousSessions.length === 0) return 'Insufficient data';
-  
+
   const recentAvg = recentSessions.reduce((sum, session) => sum + session.attendees.size, 0) / recentSessions.length;
   const previousAvg = previousSessions.reduce((sum, session) => sum + session.attendees.size, 0) / previousSessions.length;
-  
+
   const growth = ((recentAvg - previousAvg) / previousAvg) * 100;
-  
+
   if (growth > 10) return 'Growing';
   if (growth < -10) return 'Declining';
   return 'Stable';
@@ -252,7 +251,7 @@ function getCrossActivityData() {
     const data = sheet.getDataRange().getValues().slice(1);
     data.forEach(row => {
       const attendeeId = row[COL.ATTENDEE_ID];
-      const activity   = row[COL.ACTIVITY];
+      const activity = row[COL.ACTIVITY];
       if (!attendeesMap.has(attendeeId)) attendeesMap.set(attendeeId, new Set());
       attendeesMap.get(attendeeId).add(activity);
     });
@@ -263,8 +262,8 @@ function getCrossActivityData() {
     .filter(([_, acts]) => acts.size > 1)
     .map(([attendeeId, acts]) => ({
       attendeeId,
-      attendeeName:  getAttendeeName(attendeeId.toString()),
-      activities:    Array.from(acts),
+      attendeeName: getAttendeeName(attendeeId.toString()),
+      activities: Array.from(acts),
       activityCount: acts.size
     }))
     .sort((a, b) => b.activityCount - a.activityCount);
@@ -275,8 +274,8 @@ function getCrossActivityData() {
     for (let j = i + 1; j < activities.length; j++) {
       const overlap = calculateActivityOverlap(activities[i], activities[j], attendeesMap);
       activityOverlaps.push({
-        pair:        `${activities[i]} & ${activities[j]}`,
-        overlap:     `${overlap}%`,
+        pair: `${activities[i]} & ${activities[j]}`,
+        overlap: `${overlap}%`,
         correlation: overlap > 60 ? 'High' : overlap > 30 ? 'Medium' : 'Low'
       });
     }
@@ -302,7 +301,7 @@ function calculateActivityOverlap(activityA, activityB, attendeesMap) {
   });
 
   const intersection = new Set([...setA].filter(x => setB.has(x)));
-  const union        = new Set([...setA, ...setB]);
+  const union = new Set([...setA, ...setB]);
   return union.size > 0 ? Math.round((intersection.size / union.size) * 100) : 0;
 }
 
@@ -326,15 +325,20 @@ function getAttendeeName(attendeeId) {
 }
 
 function getMostPopularActivity() {
-  let maxCount = 0, popularActivity = 'N/A';
+  let maxCount = 0, popularActivityId = null;
+
   for (const activity of VALID_ACTIVITIES) {
     const stats = getActivityStats(activity);
     if (stats.totalAttendees > maxCount) {
       maxCount = stats.totalAttendees;
-      popularActivity = activity;
+      popularActivityId = activity;
     }
   }
-  return popularActivity;
+
+  if (!popularActivityId) return 'N/A';
+
+  const activityEntry = Object.values(ACTIVITY_CONFIG).find(a => a.id === popularActivityId);
+  return activityEntry ? activityEntry.displayName : 'N/A';
 }
 
 function getPeakHours() {
